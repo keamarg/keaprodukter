@@ -1,6 +1,34 @@
-/* body {
-  background-color: #343a40 !important;
-} */
+/* style.css: overriding existing scss classes with important, since it is not possible to recompile due to CDN */
+
+/* css til at undgå at cms css'et vises som enormt småt */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #233249 !important;
+}
+
+/* joomla's wrapper */
 .page-wrapper {
   background-color: #343a40 !important;
+}
+.searchFld,
+.searchBtn {
+  height: 3rem;
+}
+/* .searchFld {
+  width: 15rem !important;
+} */
+
+.btn-custom {
+  color: red !important;
+  background-color: white !important;
+  border-color: white !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+}
+
+/* rykker navbar helt til venstre */
+.row {
+  --bs-gutter-x: 0rem !important;
 }

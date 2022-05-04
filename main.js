@@ -9,18 +9,100 @@ const Navigation = {
       imgcss: {
         width: "12rem",
         "text-align": "left",
+        // "padding-bottom": "1rem",
+      },
+      titlecss: {
+        color: "white",
+        "text-transform": "none",
+        // "margin-bottom": "0.7rem",
+        "font-size": "2rem",
+        // "padding-bottom": "0rem",
+        // "margin-bottom": "0rem",
       },
     };
   },
   methods: {},
   template: `
-    <nav class="navbar">
-      <div class="container justify-content-start">
-        <a class="navbar-brand" href="https://bibliotek.kea.dk/da/?id=273">
-          <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEAprodukter_logo.png" :style="imgcss" class="logo" alt="">
+    <nav class="navbar d-flex flex-row">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="https://bibliotek.kea.dk/da/?id=273">
+          <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEA_logo_EN_Web_red.png" :style="imgcss" class="logo d-inline" alt="">
+          <p :style="titlecss" class="d-inline ps-2 align-self-end">Produkter</p>
         </a>
+        <form class="d-flex" action="https://api.agify.io" method="GET">
+          <input name="name" value="" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
+          <button class="searchBtn btn btn-outline-light" type="submit">Søg</button>
+        </form>
       </div>
     </nav>
+  `,
+};
+
+//Btngroup
+const Btngroup = {
+  name: "Btngroup",
+  props: {
+    // size: Number,
+    materials: Array,
+    categories: Array,
+  },
+  data() {
+    return {};
+  },
+  methods: {},
+  template: `
+  <div class="btn-group d-flex" role="group" aria-label="Basic example">
+    <span v-for="category in categories">
+      <button type="button" class="btn btn-primary btn-custom me-4 rounded-pill">{{category}}</button>
+    </span>
+    <span v-for="material in materials">
+      <button type="button" class="btn btn-primary btn-custom me-4 rounded-pill">{{material}}</button>
+    </span>
+  </div>
+  `,
+};
+
+//Alt indhold i denne
+const Wrapper = {
+  name: "Wrapper",
+  props: {
+    images: Object,
+  },
+  data() {
+    return {
+      materials: [
+        "E-bøger",
+        "Artikler",
+        "Videoer",
+        "Rapporter",
+        "Podcasts",
+        "Bøger",
+      ],
+      categories: [
+        "Labs",
+        "Digital",
+        "Byg",
+        "Design",
+        "Teknik",
+        "Business",
+        "Teknologi",
+      ],
+    };
+  },
+  methods: {},
+  template: `
+  <div class="container">
+    <div class="row">
+      <div class="col-6 d-flex">
+        <navigation></navigation>
+      </div>
+        <div class="col-6">
+          <btngroup :materials="materials" class="d-flex justify-content-center"></btngroup>
+          <btngroup :categories="categories" class="d-flex justify-content-center"></btngroup>
+        </div>
+    </div>
+  </div>
+  <carousel :images="images" :message="message" />
   `,
 };
 
@@ -64,9 +146,11 @@ const Carousel = {
         <div class="carousel-item">
           <img :src="images.img3" class="d-block w-100" alt="...">
           <div class="carousel-caption d-none d-md-block">
-            <h5 v-if="!message">Loading Please wait...</h5>
-            <h5 v-else> {{message.portfolio[0].id}}</h5>
-            <p>Et random billede.</p>
+            <h5 v-if="!message">{{message}}Loading Please wait...</h5>
+            <span v-else>
+              <h5> {{message.portfolio[0].resource_metadata.title}}</h5>
+              <p>{{message.portfolio[0].id}}</p>
+            </span>
           </div>
         </div>
       </div>
@@ -84,14 +168,14 @@ const Carousel = {
 
 // app
 Vue.createApp({
-  setup() {
-    const message = reactive({
-      message: null,
-    });
-  },
+  // setup() {
+  //   const message = Vue.reactive({
+  //     message: null,
+  //   });
+  // },
   data() {
     return {
-      // message: "",
+      message: "",
       count: 0,
       images: {
         img1: "https://bibliotek.kea.dk/images/KEAprodukter/balslev.png",
@@ -110,13 +194,14 @@ Vue.createApp({
       .then((res) => res.json())
       .then((response) => {
         this.message = response;
-        console.log(this.message.portfolio[0].id);
       })
       .catch((error) => {
         this.message = error;
       });
   },
 })
+  .component("Wrapper", Wrapper)
   .component("Carousel", Carousel)
   .component("Navigation", Navigation)
+  .component("Btngroup", Btngroup)
   .mount("#app");
