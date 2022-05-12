@@ -12,12 +12,12 @@ body {
 .page-wrapper {
   background-color: #343a40 !important;
 }
-.searchFld,
+/* .searchFld,
 .searchBtn {
   height: 3rem;
-}
+} */
 /* .searchFld {
-  width: 15rem !important;
+  width: 30rem !important;
 } */
 
 .btn-custom {
@@ -25,10 +25,58 @@ body {
   background-color: white !important;
   border-color: white !important;
   font-weight: bold !important;
-  text-transform: uppercase !important;
+  /* text-transform: uppercase !important; */
 }
 
 /* rykker navbar helt til venstre */
-.row {
+/* .row {
   --bs-gutter-x: 0rem !important;
+} */
+
+.rounded-custom {
+  border-radius: 10px;
+}
+.carousel img {
+  object-fit: cover; /* Do not scale the image */
+  object-position: center; /* Center the image within the element */
+  height: 30rem;
+  width: 100%;
+}
+
+/* Cards */
+.card-text {
+  font-size: 1rem;
+}
+/* .embed-responsive .card-img-top {
+  object-fit: cover;
+  object-position: center; 
+} */
+
+.card-img-top {
+  height: 20rem;
+  object-fit: cover;
+  object-position: center;
+}
+.card {
+  transition: all 0.2s ease-in-out;
+}
+.card:hover {
+  transform: scale(1.05);
+  /* color: #ea4e44 !important; */
+}
+
+.card:hover .card-title {
+  color: #ea4e44 !important;
+}
+
+/* Multi carousel */
+/* Tried this, did not work: https://www.codeply.com/p/0CWffz76Q9 */
+
+/* Icons */
+.bi {
+  color: #ced4da;
+  font-size: 4rem;
+}
+.bi:hover {
+  color: white;
 }
