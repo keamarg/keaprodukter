@@ -85,17 +85,17 @@ const Carousel = {
         <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
       <div class="carousel-inner border-0 rounded-custom">
-        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
+        <!--<div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
           <img :src="product.image1" class="d-block w-100 border-0 rounded-custom" alt="...">
            <div class="carousel-caption d-none d-md-block">
             <h5 v-if="!data">{{data}}Loading Please wait...</h5>
             <span v-else>
-              <h5> {{product.title}}</h5>
-              <p>{{data.portfolio[0].id}}</p>
+              <h5> {{data.portfolio[index].resource_metadata.title}}</h5>
+              <p>{{data.portfolio[index].activation_date}}</p>
             </span>
           </div>
         </div>
-      </div>
+      </div>-->
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
@@ -236,69 +236,91 @@ const app = Vue.createApp({
     return {
       data: null,
       count: 0,
-      products: [
-        {
-          image1: "/images/KEAprodukter/balslev.png",
-          title: "Kritik af den digital fornuft",
-          subtext: "Et KEA produkt af",
-          text: "Lorem ipsum...",
-          author1: "Jesper Balslev",
-          video1: "",
-          press: "",
-        },
-        {
-          image1: "/images/KEAprodukter/knibestribe.png",
-          title: "Knibestriben",
-          subtext: "Et KEA produkt af",
-          text: "Lorem ipsum...",
-          author1: "Per Halstrøm",
-          video1: "zBr_ozl_Tgg",
-          press: "",
-        },
-        {
-          image1:
-            "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
-          // title: this.data.portfolio[0].resource_metadata.title,
-          // subtext: this.data.portfolio[0].id,
-          title:
-            this.data !== null
-              ? "ping"
-              : this.data.portfolio[0].resource_metadata.title,
-          subtext: "Et KEA produkt af",
-          text: "Lorem ipsum...",
-          author1: "Jan Johannson",
-          video1: "",
-          press: "",
-        },
-      ],
+      products: [],
+      productLinks: [],
+      fetchUrl:
+        "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios?limit=10&offset=0&apikey=l8xxf96f99c580364be08333d1a57b4af036",
+      // products: [
+      //   {
+      //     image1: "/images/KEAprodukter/balslev.png",
+      //     title: "Kritik af den digital fornuft",
+      //     subtext: "Et KEA produkt af",
+      //     text: "Lorem ipsum...",
+      //     author1: "Jesper Balslev",
+      //     video1: "",
+      //     press: "",
+      //   },
+      //   {
+      //     image1: "/images/KEAprodukter/knibestribe.png",
+      //     title: "Knibestriben",
+      //     subtext: "Et KEA produkt af",
+      //     text: "Lorem ipsum...",
+      //     author1: "Per Halstrøm",
+      //     video1: "zBr_ozl_Tgg",
+      //     press: "",
+      //   },
+      //   {
+      //     image1:
+      //       "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
+      //     // title: this.data.portfolio[0].resource_metadata.title,
+      //     // subtext: this.data.portfolio[0].id,
+      //     title:
+      //       this.data !== null
+      //         ? "ping"
+      //         : this.data.portfolio[0].resource_metadata.title,
+      //     subtext: "Et KEA produkt af",
+      //     text: "Lorem ipsum...",
+      //     author1: "Jan Johannson",
+      //     video1: "",
+      //     press: "",
+      //   },
+      // ],
     };
   },
   methods: {
     log(item) {
       console.log(item);
     },
-    updateData() {
-      this.title = this.data.portfolio[0].resource_metadata.title;
+    fetchData(url) {
+      fetch(url, {
+        headers: { "Content-type": "application/json" },
+      })
+        .then((res) => res.json())
+        .then((response) => {
+          this.data = response;
+
+          if (this.productLinks.length < 1) {
+            response.portfolio.map((product, index) => {
+              return (this.productLinks[index] = {
+                link: product.resource_metadata.mms_id.link,
+              });
+            });
+            console.log(this.productLinks[0]);
+          }
+          if (this.products.length < 1) {
+            console.log(this.products.length);
+            this.productLinks.map((link, index) => {
+              console.log("yes " + link.link);
+              if (this.products.length < this.productLinks.length) {
+                // return (this.products[index] = this.fetchData(link.link));
+                console.log(JSON.stringify(this.data));
+                this.fetchData(link.link);
+                return (this.products[index] = this.data);
+              }
+            });
+          }
+
+          // console.log("data " + JSON.stringify(this.data));
+        })
+
+        .catch((error) => {
+          this.data = error;
+        });
     },
   },
   mounted() {
-    console.log(this.data);
-    fetch(
-      "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios",
-      {
-        headers: { "Content-type": "application/json" },
-      }
-    )
-      .then((res) => res.json())
-      .then((response) => {
-        this.data = response;
-        console.log("data " + JSON.stringify(this.data));
-        console.log(typeof this.data);
-      })
-
-      .catch((error) => {
-        this.data = error;
-      });
+    // console.log(this.data);
+    this.fetchData(this.fetchUrl);
   },
 })
 
