@@ -67,10 +67,12 @@ const Carousel = {
   name: "Carousel",
   props: {
     products: Array,
-    data: Object,
+    dataready: Boolean,
   },
   data() {
-    return {};
+    return {
+      tempImg: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
+    };
   },
   methods: {
     log(item) {
@@ -85,17 +87,17 @@ const Carousel = {
         <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
       <div class="carousel-inner border-0 rounded-custom">
-        <!--<div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
-          <img :src="product.image1" class="d-block w-100 border-0 rounded-custom" alt="...">
+        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
+          <img :src="tempImg" class="d-block w-100 border-0 rounded-custom" alt="...">
            <div class="carousel-caption d-none d-md-block">
-            <h5 v-if="!data">{{data}}Loading Please wait...</h5>
+            <h5 v-if="!dataready">Loading Please wait...</h5>
             <span v-else>
-              <h5> {{data.portfolio[index].resource_metadata.title}}</h5>
-              <p>{{data.portfolio[index].activation_date}}</p>
+              <h5> {{product.title}}</h5>
+              <p>{{product.author}}</p>
             </span>
           </div>
         </div>
-      </div>-->
+      </div>
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
@@ -112,7 +114,7 @@ const Carousel = {
 const Card = {
   name: "Card",
   props: {
-    data: Object,
+    // data: Object,
     cards: Array,
   },
   data() {
@@ -138,7 +140,7 @@ const Card = {
 const Wrapper = {
   name: "Wrapper",
   props: {
-    data: Object,
+    dataready: Boolean,
     products: Array,
   },
   data() {
@@ -218,7 +220,7 @@ const Wrapper = {
         <i class="bi bi-share d-md-block m-5 m-md-0"></i>
       </div>
       <div class="col-md-11">
-        <carousel :products="products" :data="data" />
+        <carousel :products="products" :dataready="dataready" />
       </div>
     </div>
   </div>
@@ -234,10 +236,10 @@ const app = Vue.createApp({
   setup() {},
   data() {
     return {
-      data: null,
-      count: 0,
+      dataready: false,
+      // count: 0,
       products: [],
-      productLinks: [],
+      productLinks: null,
       fetchUrl:
         "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios?limit=10&offset=0&apikey=l8xxf96f99c580364be08333d1a57b4af036",
       // products: [
@@ -281,43 +283,78 @@ const app = Vue.createApp({
     log(item) {
       console.log(item);
     },
-    fetchData(url) {
-      fetch(url, {
-        headers: { "Content-type": "application/json" },
-      })
-        .then((res) => res.json())
-        .then((response) => {
-          this.data = response;
-
-          if (this.productLinks.length < 1) {
-            response.portfolio.map((product, index) => {
-              return (this.productLinks[index] = {
-                link: product.resource_metadata.mms_id.link,
-              });
-            });
-            console.log(this.productLinks[0]);
-          }
-          if (this.products.length < 1) {
-            console.log(this.products.length);
-            this.productLinks.map((link, index) => {
-              console.log("yes " + link.link);
-              if (this.products.length < this.productLinks.length) {
-                // return (this.products[index] = this.fetchData(link.link));
-                console.log(JSON.stringify(this.data));
-                this.fetchData(link.link);
-                return (this.products[index] = this.data);
-              }
-            });
-          }
-
-          // console.log("data " + JSON.stringify(this.data));
-        })
-
-        .catch((error) => {
-          this.data = error;
+    async fetchData(url) {
+      try {
+        const response = await fetch(url, {
+          headers: { "Content-type": "application/json" },
         });
+        const data = await response.json();
+        console.log(data.portfolio);
+
+        const fetchedProductLinks = data.portfolio.map((product, index) => {
+          let links = [];
+          return (links[index] = {
+            link: product.resource_metadata.mms_id.link,
+          });
+        });
+        console.log(fetchedProductLinks);
+        this.productLinks = await fetchedProductLinks;
+
+        await this.productLinks.map(async (link, index) => {
+          console.log(link);
+          // if (this.products.length < this.productLinks.length) {
+          const response = await fetch(link.link, {
+            headers: { "Content-type": "application/json" },
+          });
+          const data = await response.json();
+
+          this.products[index] = await data;
+          // // }
+          // if (this.products.length == this.productLinks.length) {
+          // this.dataready = true;
+          // }
+        });
+      } catch (error) {
+        console.error(error);
+      }
     },
   },
+
+  //   fetchData(url) {
+  //     fetch(url, {
+  //       headers: { "Content-type": "application/json" },
+  //     })
+  //       .then((res) => res.json())
+  //       .then((response) => {
+  //         // this.data = response;
+  //         // if (this.productLinks.length < 1) {
+  //         response.portfolio.map((product, index) => {
+  //           return (this.productLinks[index] = {
+  //             link: product.resource_metadata.mms_id.link,
+  //           });
+  //         });
+  //         // }
+  //         // if (this.products.length < 1) {
+  //         this.productLinks.map(async (link, index) => {
+  //           // if (this.products.length < this.productLinks.length) {
+  //           const res = await fetch(link.link, {
+  //             headers: { "Content-type": "application/json" },
+  //           });
+  //           const response = await res.json();
+  //           this.products[index] = response;
+  //           // }
+  //           if (this.products.length == this.productLinks.length) {
+  //             this.dataready = true;
+  //           }
+  //         });
+  //         // }
+  //       })
+
+  //       .catch((error) => {
+  //         this.data = error;
+  //       });
+  //   },
+  // },
   mounted() {
     // console.log(this.data);
     this.fetchData(this.fetchUrl);
