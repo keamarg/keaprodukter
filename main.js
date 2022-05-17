@@ -66,8 +66,8 @@ const Btngroup = {
 const Carousel = {
   name: "Carousel",
   props: {
-    products: Array,
-    dataready: Boolean,
+    products: { type: Array },
+    loading: { type: Boolean },
   },
   data() {
     return {
@@ -81,20 +81,24 @@ const Carousel = {
   },
   template: `
     <div id="carouselExampleCaptions" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="10000">
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
-      </div>
-      <div class="carousel-inner border-0 rounded-custom">
-        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
-          <img :src="tempImg" class="d-block w-100 border-0 rounded-custom" alt="...">
-           <div class="carousel-caption d-none d-md-block">
-            <h5 v-if="!dataready">Loading Please wait...</h5>
-            <span v-else>
-              <h5> {{product.title}}</h5>
-              <p>{{product.author}}</p>
-            </span>
+      <h5 v-if="loading">Loading Please wait...</h5>
+      <div v-else>
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        </div>
+        <div class="carousel-inner border-0 rounded-custom">
+          <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
+            <img :src="tempImg" class="d-block w-100 border-0 rounded-custom" alt="...">
+            <div class="carousel-caption d-none d-md-block">
+              <h5 v-if="loading">Loading Please wait...</h5>
+              <span v-else>
+                <h5>{{product.title}}</h5>
+                <p>{{product.author}}</p>
+                <p>{{product.anies}}</p>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -140,8 +144,8 @@ const Card = {
 const Wrapper = {
   name: "Wrapper",
   props: {
-    dataready: Boolean,
-    products: Array,
+    loading: { type: Boolean },
+    products: { type: Array },
   },
   data() {
     return {
@@ -220,7 +224,7 @@ const Wrapper = {
         <i class="bi bi-share d-md-block m-5 m-md-0"></i>
       </div>
       <div class="col-md-11">
-        <carousel :products="products" :dataready="dataready" />
+        <carousel :products="products" :loading="loading"/>
       </div>
     </div>
   </div>
@@ -236,10 +240,8 @@ const app = Vue.createApp({
   setup() {},
   data() {
     return {
-      dataready: false,
-      // count: 0,
+      loading: true,
       products: [],
-      productLinks: null,
       fetchUrl:
         "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios?limit=10&offset=0&apikey=l8xxf96f99c580364be08333d1a57b4af036",
       // products: [
@@ -285,78 +287,35 @@ const app = Vue.createApp({
     },
     async fetchData(url) {
       try {
+        //henter productLinks ind fra den aktuelle portfolio, så de kan bruges til at hente products
         const response = await fetch(url, {
           headers: { "Content-type": "application/json" },
         });
         const data = await response.json();
-        console.log(data.portfolio);
 
-        const fetchedProductLinks = data.portfolio.map((product, index) => {
-          let links = [];
-          return (links[index] = {
+        const productLinks = data.portfolio.map((product, index) => {
+          let linkList = [];
+          return (linkList[index] = {
             link: product.resource_metadata.mms_id.link,
           });
         });
-        console.log(fetchedProductLinks);
-        this.productLinks = await fetchedProductLinks;
 
-        await this.productLinks.map(async (link, index) => {
-          console.log(link);
-          // if (this.products.length < this.productLinks.length) {
+        //bruger productLinks til at hente products ind
+        const products = productLinks.map(async (link, index) => {
           const response = await fetch(link.link, {
             headers: { "Content-type": "application/json" },
           });
           const data = await response.json();
-
-          this.products[index] = await data;
-          // // }
-          // if (this.products.length == this.productLinks.length) {
-          // this.dataready = true;
-          // }
+          return (this.products[index] = await data); // promise "udskiftes" med selve dataen her
         });
+        this.products = products; // får kun promise her (undgår crash når dataen skal bruges, men endnu ikke er der)
+        this.loading = false;
       } catch (error) {
         console.error(error);
       }
     },
   },
-
-  //   fetchData(url) {
-  //     fetch(url, {
-  //       headers: { "Content-type": "application/json" },
-  //     })
-  //       .then((res) => res.json())
-  //       .then((response) => {
-  //         // this.data = response;
-  //         // if (this.productLinks.length < 1) {
-  //         response.portfolio.map((product, index) => {
-  //           return (this.productLinks[index] = {
-  //             link: product.resource_metadata.mms_id.link,
-  //           });
-  //         });
-  //         // }
-  //         // if (this.products.length < 1) {
-  //         this.productLinks.map(async (link, index) => {
-  //           // if (this.products.length < this.productLinks.length) {
-  //           const res = await fetch(link.link, {
-  //             headers: { "Content-type": "application/json" },
-  //           });
-  //           const response = await res.json();
-  //           this.products[index] = response;
-  //           // }
-  //           if (this.products.length == this.productLinks.length) {
-  //             this.dataready = true;
-  //           }
-  //         });
-  //         // }
-  //       })
-
-  //       .catch((error) => {
-  //         this.data = error;
-  //       });
-  //   },
-  // },
   mounted() {
-    // console.log(this.data);
     this.fetchData(this.fetchUrl);
   },
 })
