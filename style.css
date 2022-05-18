@@ -28,6 +28,11 @@ body {
   /* text-transform: uppercase !important; */
 }
 
+.carousel-indicators {
+  z-index: 10000 !important;
+  position: relative;
+}
+
 /* rykker navbar helt til venstre */
 /* .row {
   --bs-gutter-x: 0rem !important;
@@ -79,4 +84,42 @@ body {
 }
 .bi:hover {
   color: white;
+}
+
+/* custom media queries*/
+
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+  .carousel-indicators button {
+    left: 3rem;
+    position: relative;
+  }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+  .carousel-indicators button {
+    left: 4rem;
+    position: relative;
+  }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+  .carousel-indicators button {
+    left: 4rem;
+    position: relative;
+  }
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+  .carousel-indicators button {
+    left: 6rem;
+    position: relative;
+  }
 }

@@ -79,26 +79,23 @@ const Carousel = {
       console.log(item);
     },
   },
-  template: `
-    <div id="carouselExampleCaptions" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="10000">
-      <h5 v-if="loading">Loading Please wait...</h5>
-      <div v-else>
-        <div class="carousel-indicators">
-          <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-          <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
-          <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
-        </div>
-        <div class="carousel-inner border-0 rounded-custom">
-          <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
-            <img :src="tempImg" class="d-block w-100 border-0 rounded-custom" alt="...">
-            <div class="carousel-caption d-none d-md-block">
-              <h5 v-if="loading">Loading Please wait...</h5>
-              <span v-else>
-                <h5>{{product.title}}</h5>
-                <p>{{product.author}}</p>
-                <p>{{product.anies}}</p>
-              </span>
-            </div>
+  template: `   
+    <h5 v-if="loading">Loading Please wait...</h5>
+    <div v-else id="carouselExampleCaptions" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="10000">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
+      </div>
+      <div class="carousel-inner border-0 rounded-custom">
+        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
+          <img :src="product.img1" class="d-block w-100 border-0 rounded-custom" alt="...">
+          <div class="carousel-caption d-none d-md-block border-0 rounded-custom" style="background-color:rgba(0,0,0,0.2)">
+            <h5 v-if="loading">Loading Please wait...</h5>
+            <span v-else>
+              <h5>{{product.author}}</h5>
+              <p>{{product.title}}</p>
+            </span>
           </div>
         </div>
       </div>
@@ -306,7 +303,40 @@ const app = Vue.createApp({
             headers: { "Content-type": "application/json" },
           });
           const data = await response.json();
-          return (this.products[index] = await data); // promise "udskiftes" med selve dataen her
+
+          // parse xml inspireret af https://www.c-sharpcorner.com/blogs/get-data-from-xml-content-using-javascript
+          parser = new DOMParser();
+          xmlDoc = parser.parseFromString(await data.anies, "text/xml");
+          // console.log(xmlDoc);
+
+          var x = xmlDoc.getElementsByTagName("datafield");
+          // console.log(x);
+          const parsedData = [];
+          for (i = 0; i < x.length; i++) {
+            parsedData[i] =
+              x[i].getElementsByTagName("subfield")[0].childNodes[0].nodeValue;
+          }
+          // console.log(parsedData);
+          // Midlertidig løsning, tjekker om det er et "ægte" produkt (mere end 3 entries), og angiver data derefter
+          if (parsedData.length > 3) {
+            return (
+              (this.products[index].author = parsedData[0]),
+              (this.products[index].title = parsedData[1]),
+              (this.products[index].subtitle = parsedData[2]),
+              (this.products[index].text = parsedData[3]),
+              (this.products[index].keywords = parsedData[4]),
+              (this.products[index].author2 = parsedData[5]),
+              (this.products[index].author3 = parsedData[6]),
+              (this.products[index].links = parsedData[7]),
+              (this.products[index].video = parsedData[8]),
+              (this.products[index].video2 = parsedData[9]),
+              (this.products[index].img1 = parsedData[10]),
+              (this.products[index].img2 = parsedData[11]),
+              (this.products[index].img3 = parsedData[12])
+            );
+          } else {
+            return (this.products[index] = await data); // promise "udskiftes" med selve dataen her
+          }
         });
         this.products = products; // får kun promise her (undgår crash når dataen skal bruges, men endnu ikke er der)
         this.loading = false;
