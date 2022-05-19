@@ -1,12 +1,22 @@
 //Router components
 
-const Home = { template: "<div><routetest/></div>" };
-const About = { template: "<div>About</div>" };
+const Home = {
+  props: ["products", "loading"],
+  template: `<wrapper :products="products" :loading="loading"/>`,
+};
+const About = {
+  props: [(products = "products")],
+  template: `<div :products="products"><h1>{{products[$route.params.id].title}}</h1><p>{{products[$route.params.id].text}}</p></div>`,
+};
 
 //Routes
 const routes = [
-  { path: "/", component: Home },
-  { path: "/about", component: About },
+  {
+    name: "Home",
+    path: "/",
+    component: Home,
+  },
+  { name: "About", path: "/about", component: About },
 ];
 
 const router = VueRouter.createRouter({
@@ -32,6 +42,9 @@ const Routetest = {
       }
     },
   },
+  template: `
+    <div>Hello</div>
+  `,
 };
 
 //Top bar
@@ -58,10 +71,15 @@ const Navigation = {
   methods: {},
   template: `
     <nav class="navbar justify-content-start">
-        <a class="navbar-brand p-0 d-flex align-items-center" href="https://bibliotek.kea.dk/da/?id=273">
+        <router-link :to="{ name: 'Home'}">
+
+        <div class="navbar-brand p-0 d-flex align-items-center" href="https://bibliotek.kea.dk/da/?id=273">
           <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEA_logo_EN_Web_red.png" :style="imgcss" class="logo d-inline" alt="">
           <p :style="titlecss" class="d-inline ps-2 m-0">Produkter</p>
-        </a>
+        </div>
+
+        </router-link>
+        
         <form class="d-flex w-50" action="https://api.agify.io" method="GET">
           <input name="name" value="" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
           <button class="searchBtn btn btn-outline-light" type="submit">&nbsp;Søg&nbsp;</button>
@@ -124,13 +142,17 @@ const Carousel = {
       <div class="carousel-inner border-0 rounded-custom">
         <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
           <img :src="product.img1" class="d-block w-100 border-0 rounded-custom" alt="...">
-          <div class="carousel-caption d-none d-md-block border-0 rounded-custom" style="background-color:rgba(0,0,0,0.2)">
+          {{log(product.id)}}
+          <router-link :to="{ name: 'About',params:{id:product.id}}">
+
+          <div class="carousel-caption d-block border-0 rounded-custom">
             <h5 v-if="loading">Loading Please wait...</h5>
             <span v-else>
               <h5>{{product.author}}</h5>
               <p>{{product.title}}</p>
             </span>
           </div>
+          </router-link>
         </div>
       </div>
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
@@ -345,6 +367,7 @@ const app = Vue.createApp({
         img1: parsedData[10],
         img2: parsedData[11],
         img3: parsedData[12],
+        id: this.products.length,
       });
     },
 
@@ -389,5 +412,6 @@ const app = Vue.createApp({
   .component("Carousel", Carousel)
   .component("Card", Card)
   .component("Routetest", Routetest)
+  .component("Home", Home)
   .use(router)
   .mount("#app");
