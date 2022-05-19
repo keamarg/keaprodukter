@@ -1,4 +1,38 @@
+//Router components
+
+const Home = { template: "<div><routetest/></div>" };
+const About = { template: "<div>About</div>" };
+
+//Routes
+const routes = [
+  { path: "/", component: Home },
+  { path: "/about", component: About },
+];
+
+const router = VueRouter.createRouter({
+  history: VueRouter.createWebHashHistory(),
+  routes, // short for `routes: routes`
+});
+
 // Components
+
+const Routetest = {
+  computed: {
+    username() {
+      // We will see what `params` is shortly
+      return this.$route.params.username;
+    },
+  },
+  methods: {
+    goToDashboard() {
+      if (isAuthenticated) {
+        this.$router.push("/dashboard");
+      } else {
+        this.$router.push("/login");
+      }
+    },
+  },
+};
 
 //Top bar
 const Navigation = {
@@ -278,10 +312,42 @@ const app = Vue.createApp({
       // ],
     };
   },
+  computed: {},
   methods: {
     log(item) {
       console.log(item);
     },
+    parseProducts(data) {
+      // parse xml inspireret af https://www.c-sharpcorner.com/blogs/get-data-from-xml-content-using-javascript
+      parser = new DOMParser();
+      xmlDoc = parser.parseFromString(data.anies, "text/xml");
+
+      var x = xmlDoc.getElementsByTagName("datafield");
+      const parsedData = [];
+      for (i = 0; i < x.length; i++) {
+        parsedData[i] =
+          x[i].getElementsByTagName("subfield")[0].childNodes[0].nodeValue;
+      }
+
+      // Object.assign for at beholde reactivity
+      const parsedProduct = [];
+      this.products[this.products.length] = Object.assign({}, parsedProduct, {
+        author: parsedData[0],
+        title: parsedData[1],
+        subtitle: parsedData[2],
+        text: parsedData[3],
+        keywords: parsedData[4],
+        author2: parsedData[5],
+        author3: parsedData[6],
+        links: parsedData[7],
+        video: parsedData[8],
+        video2: parsedData[9],
+        img1: parsedData[10],
+        img2: parsedData[11],
+        img3: parsedData[12],
+      });
+    },
+
     async fetchData(url) {
       try {
         //henter productLinks ind fra den aktuelle portfolio, så de kan bruges til at hente products
@@ -298,47 +364,14 @@ const app = Vue.createApp({
         });
 
         //bruger productLinks til at hente products ind
-        const products = productLinks.map(async (link, index) => {
+        productLinks.map(async (link, index) => {
           const response = await fetch(link.link, {
             headers: { "Content-type": "application/json" },
           });
           const data = await response.json();
-
-          // parse xml inspireret af https://www.c-sharpcorner.com/blogs/get-data-from-xml-content-using-javascript
-          parser = new DOMParser();
-          xmlDoc = parser.parseFromString(await data.anies, "text/xml");
-          // console.log(xmlDoc);
-
-          var x = xmlDoc.getElementsByTagName("datafield");
-          // console.log(x);
-          const parsedData = [];
-          for (i = 0; i < x.length; i++) {
-            parsedData[i] =
-              x[i].getElementsByTagName("subfield")[0].childNodes[0].nodeValue;
-          }
-          // console.log(parsedData);
-          // Midlertidig løsning, tjekker om det er et "ægte" produkt (mere end 3 entries), og angiver data derefter
-          if (parsedData.length > 3) {
-            return (
-              (this.products[index].author = parsedData[0]),
-              (this.products[index].title = parsedData[1]),
-              (this.products[index].subtitle = parsedData[2]),
-              (this.products[index].text = parsedData[3]),
-              (this.products[index].keywords = parsedData[4]),
-              (this.products[index].author2 = parsedData[5]),
-              (this.products[index].author3 = parsedData[6]),
-              (this.products[index].links = parsedData[7]),
-              (this.products[index].video = parsedData[8]),
-              (this.products[index].video2 = parsedData[9]),
-              (this.products[index].img1 = parsedData[10]),
-              (this.products[index].img2 = parsedData[11]),
-              (this.products[index].img3 = parsedData[12])
-            );
-          } else {
-            return (this.products[index] = await data); // promise "udskiftes" med selve dataen her
-          }
+          // console.log(data);
+          this.parseProducts(data);
         });
-        this.products = products; // får kun promise her (undgår crash når dataen skal bruges, men endnu ikke er der)
         this.loading = false;
       } catch (error) {
         console.error(error);
@@ -355,4 +388,6 @@ const app = Vue.createApp({
   .component("Btngroup", Btngroup)
   .component("Carousel", Carousel)
   .component("Card", Card)
+  .component("Routetest", Routetest)
+  .use(router)
   .mount("#app");
