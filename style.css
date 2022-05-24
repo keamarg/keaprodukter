@@ -41,6 +41,7 @@ body {
 .rounded-custom {
   border-radius: 10px;
 }
+
 .carousel img {
   object-fit: cover; /* Do not scale the image */
   object-position: center; /* Center the image within the element */
@@ -139,4 +140,16 @@ body {
     left: 6rem;
     position: relative;
   }
+}
+
+/*transitions*/
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }

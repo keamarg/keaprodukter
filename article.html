@@ -26,8 +26,18 @@
   </head>
   <body>
     <div id="app">
-      <router-view :products="products" :loading="loading"></router-view>
-      <!-- <wrapper :products="products" :loading="loading"> </wrapper> -->
+      <topbar></topbar>
+      <router-view
+        :products="products"
+        :loading="loading"
+        v-slot="{ Component,route }"
+      >
+        <transition name="fade" mode="out-in">
+          <div :key="route.name">
+            <component :is="Component" />
+          </div>
+        </transition>
+      </router-view>
     </div>
   </body>
   <script src="https://projekter.kea.dk/produkter/main.js"></script>

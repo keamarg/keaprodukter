@@ -1,32 +1,8 @@
 //Router components
 
 const Home = {
+  name: "Home",
   props: ["products", "loading"],
-  template: `<wrapper :products="products" :loading="loading"/>`,
-};
-const About = {
-  props: [(products = "products")],
-  template: `<div :products="products"><h1>{{products[$route.params.id].title}}</h1><p>{{products[$route.params.id].text}}</p></div>`,
-};
-
-//Routes
-const routes = [
-  {
-    name: "Home",
-    path: "/",
-    component: Home,
-  },
-  { name: "About", path: "/about", component: About },
-];
-
-const router = VueRouter.createRouter({
-  history: VueRouter.createWebHashHistory(),
-  routes, // short for `routes: routes`
-});
-
-// Components
-
-const Routetest = {
   computed: {
     username() {
       // We will see what `params` is shortly
@@ -43,9 +19,46 @@ const Routetest = {
     },
   },
   template: `
-    <div>Hello</div>
-  `,
+  <div>
+    <iconbar></iconbar>
+    <content :products="products" :loading="loading"/>
+  </div>`,
 };
+
+const Product = {
+  name: "Product",
+  props: ["products", "loading"],
+  template: `
+  <div :products="products" :loading="loading">
+    <div v-if="loading">Loading please wait...</div>
+    <div v-else>
+     <div class="row align-items-center text-center">
+     <iconbar></iconbar>
+      <div class="col-md-11">
+        <h1>{{products[$route.params.id].title}}</h1>
+        <p>{{products[$route.params.id].text}}</p>
+      </div>
+    </div>
+    </div>
+  </div>`,
+};
+
+//Routes
+const routes = [
+  {
+    name: "Home",
+    path: "/",
+    component: Home,
+  },
+  { name: "Product", path: "/products/:id", component: Product },
+];
+
+const router = VueRouter.createRouter({
+  history: VueRouter.createWebHashHistory(),
+  routes, // short for `routes: routes`
+});
+
+// Components
 
 //Top bar
 const Navigation = {
@@ -72,14 +85,11 @@ const Navigation = {
   template: `
     <nav class="navbar justify-content-start">
         <router-link :to="{ name: 'Home'}">
-
-        <div class="navbar-brand p-0 d-flex align-items-center" href="https://bibliotek.kea.dk/da/?id=273">
-          <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEA_logo_EN_Web_red.png" :style="imgcss" class="logo d-inline" alt="">
-          <p :style="titlecss" class="d-inline ps-2 m-0">Produkter</p>
-        </div>
-
+          <div class="navbar-brand p-0 d-flex align-items-center">
+            <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEA_logo_EN_Web_red.png" :style="imgcss" class="logo d-inline" alt="">
+            <p :style="titlecss" class="d-inline ps-2 m-0">Produkter</p>
+          </div>
         </router-link>
-        
         <form class="d-flex w-50" action="https://api.agify.io" method="GET">
           <input name="name" value="" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
           <button class="searchBtn btn btn-outline-light" type="submit">&nbsp;Søg&nbsp;</button>
@@ -132,7 +142,7 @@ const Carousel = {
     },
   },
   template: `   
-    <h5 v-if="loading">Loading Please wait...</h5>
+    <h5 v-if="loading">Loading please wait...</h5>
     <div v-else id="carouselExampleCaptions" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="10000">
       <div class="carousel-indicators">
         <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -142,11 +152,10 @@ const Carousel = {
       <div class="carousel-inner border-0 rounded-custom">
         <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
           <img :src="product.img1" class="d-block w-100 border-0 rounded-custom" alt="...">
-          {{log(product.id)}}
-          <router-link :to="{ name: 'About',params:{id:product.id}}">
+          <router-link :to="{ name: 'Product',params:{id:product.id}}">
 
           <div class="carousel-caption d-block border-0 rounded-custom">
-            <h5 v-if="loading">Loading Please wait...</h5>
+            <h5 v-if="loading">Loading please wait...</h5>
             <span v-else>
               <h5>{{product.author}}</h5>
               <p>{{product.title}}</p>
@@ -193,12 +202,13 @@ const Card = {
   `,
 };
 
-//Alt indhold i denne
-const Wrapper = {
-  name: "Wrapper",
+//Navbar og Btngrp kombineret
+
+const Topbar = {
+  name: "Topbar",
   props: {
-    loading: { type: Boolean },
-    products: { type: Array },
+    // loading: { type: Boolean },
+    // products: { type: Array },
   },
   data() {
     return {
@@ -223,6 +233,62 @@ const Wrapper = {
         // "newCat1",
         // "newCat2",
       ],
+    };
+  },
+  methods: {
+    log(item) {
+      console.log(item);
+    },
+  },
+  template: `
+  <div class="container-fluid p-0">
+    <div class="row">
+      <div class="col-xl-6">
+        <navigation></navigation>
+      </div>
+      <div class="col-xl-6">
+        <btngroup :materials="materials"></btngroup>
+        <btngroup :categories="categories"></btngroup>
+      </div>
+    </div>
+  </div>
+  `,
+};
+
+//Sidebar ikoner
+
+const Iconbar = {
+  name: "Iconbar",
+  props: {
+    // loading: { type: Boolean },
+    // products: { type: Array },
+  },
+  data() {
+    return {};
+  },
+  methods: {
+    log(item) {
+      console.log(item);
+    },
+  },
+  template: `
+  <div class="col-md-1">
+    <i class="bi bi-heart d-md-block m-5 m-md-0"></i>
+    <i class="bi bi-calendar d-md-block mt-md-5 mb-md-5 mt-0 mtb-0"></i>
+    <i class="bi bi-share d-md-block m-5 m-md-0"></i>
+  </div>
+  `,
+};
+
+//Alt udskifteligt indhold i denne
+const Content = {
+  name: "Content",
+  props: {
+    loading: { type: Boolean },
+    products: { type: Array },
+  },
+  data() {
+    return {
       cards: [
         {
           img: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
@@ -258,24 +324,8 @@ const Wrapper = {
     },
   },
   template: `
-  <div class="container-fluid p-0">
-    <div class="row">
-      <div class="col-xl-6">
-        <navigation></navigation>
-      </div>
-      <div class="col-xl-6">
-        <btngroup :materials="materials"></btngroup>
-        <btngroup :categories="categories"></btngroup>
-      </div>
-    </div>
-  </div>
   <div class="container p-0">
     <div class="row align-items-center text-center">
-      <div class="col-md-1">
-        <i class="bi bi-heart d-md-block m-5 m-md-0"></i>
-        <i class="bi bi-calendar d-md-block mt-md-5 mb-md-5 mt-0 mtb-0"></i>
-        <i class="bi bi-share d-md-block m-5 m-md-0"></i>
-      </div>
       <div class="col-md-11">
         <carousel :products="products" :loading="loading"/>
       </div>
@@ -406,12 +456,13 @@ const app = Vue.createApp({
   },
 })
 
-  .component("Wrapper", Wrapper)
+  .component("Content", Content)
   .component("Navigation", Navigation)
   .component("Btngroup", Btngroup)
   .component("Carousel", Carousel)
   .component("Card", Card)
-  .component("Routetest", Routetest)
-  .component("Home", Home)
+  .component("Topbar", Topbar)
+  .component("Iconbar", Iconbar)
+  // .component("Home", Home)
   .use(router)
   .mount("#app");
