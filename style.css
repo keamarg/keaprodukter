@@ -12,20 +12,64 @@ body {
 .page-wrapper {
   background-color: #343a40 !important;
 }
-/* .searchFld,
-.searchBtn {
-  height: 3rem;
-} */
-/* .searchFld {
-  width: 30rem !important;
-} */
 
-.btn-custom {
-  color: red !important;
+/*Text*/
+h5 {
+  color: white;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+/* Style buttons */
+
+.btn-custom-product {
+  background-color: #f8f9fa !important;
+  border: none !important;
+  color: #343a40 !important;
+  /* padding: 0.5rem !important; */
+  font-size: 1.5rem !important;
+  cursor: pointer !important;
+  border-radius: 1rem !important;
+}
+
+.btn-custom-product:hover {
+  background-color: #343a40 !important;
+  color: #f8f9fa !important;
+}
+
+.btn-custom-product i {
+  color: #343a40;
+}
+
+.btn-custom-product:hover i {
+  color: #f8f9fa;
+}
+
+.btn-custom-nav {
+  color: #eb5045 !important;
   background-color: white !important;
   border-color: white !important;
   font-weight: bold !important;
+  border: 0px !important;
+
   /* text-transform: uppercase !important; */
+}
+
+.btn-custom-nav:hover {
+  background-color: #eb5045 !important;
+  color: white !important;
+}
+
+.btn-custom-nav:active {
+  background-color: #eb5045 !important;
+  color: white !important;
+  border: 0px !important;
+}
+
+.btn-custom-nav:focus {
+  outline: none !important;
 }
 
 .carousel-indicators {
@@ -89,18 +133,18 @@ body {
 }
 
 .card:hover .card-title {
-  color: #ea4e44 !important;
+  color: #eb5045 !important;
 }
 
 /* Multi carousel */
 /* Tried this, did not work: https://www.codeply.com/p/0CWffz76Q9 */
 
-/* Icons */
-.bi {
+/* Icons sidebar */
+.sidebar-icons {
   color: #ced4da;
   font-size: 4rem;
 }
-.bi:hover {
+.sidebar-icons:hover {
   color: white;
 }
 
@@ -144,12 +188,16 @@ body {
 
 /*transitions*/
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
+.fade-enter-active
+/*, .fade-leave-active*/ {
+  transition: opacity 1.5s ease;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from
+/*, .fade-leave-to*/ {
   opacity: 0;
+}
+.iframediv {
+  border: 3rem solid rgba(0, 0, 0, 0) !important;
+  filter: drop-shadow(0 0 5rem rgba(0, 0, 0, 1)) !important;
 }

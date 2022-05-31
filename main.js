@@ -3,12 +3,6 @@
 const Home = {
   name: "Home",
   props: ["products", "loading"],
-  computed: {
-    username() {
-      // We will see what `params` is shortly
-      return this.$route.params.username;
-    },
-  },
   methods: {
     goToDashboard() {
       if (isAuthenticated) {
@@ -19,27 +13,91 @@ const Home = {
     },
   },
   template: `
-  <div>
-    <iconbar></iconbar>
-    <content :products="products" :loading="loading"/>
-  </div>`,
+      <carousel :products="products" :loading="loading"/>
+  `,
 };
 
 const Product = {
   name: "Product",
   props: ["products", "loading"],
+  computed: {
+    video() {
+      return this.$route.fullPath == `/products/${this.$route.params.id}/video`;
+    },
+    videosrc() {
+      return `https://www.youtube.com/embed/${
+        this.products[this.$route.params.id].video
+      }?autoplay=1`;
+      return this.products[this.$route.params.id].video;
+    },
+    articlesrc() {
+      return `${this.products[this.$route.params.id].article}`;
+      return this.products[this.$route.params.id].video;
+    },
+  },
+  data() {
+    return {
+      css: {
+        textAlign: "left",
+        color: "white",
+        background:
+          "linear-gradient(0.25turn, rgba(0,0,0,0.8), rgba(0,0,0,0.6),rgba(0,0,0,0.2), rgba(0,0,0,0.0)),url(" +
+          this.products[this.$route.params.id].img1 +
+          "), no-repeat",
+        backgroundSize: "cover",
+        fontSize: "16px",
+        // minHeight: "70rem",
+      },
+    };
+  },
+  methods: {
+    log(item) {
+      console.log(item);
+    },
+  },
+  created() {
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        if (this.products[toParams.id]) {
+          this.css.backgroundImage =
+            "linear-gradient(0.25turn, rgba(0,0,0,0.8), rgba(0,0,0,0.6),rgba(0,0,0,0.3), rgba(0,0,0,0.0)),url(" +
+            this.products[toParams.id].img1 +
+            ")";
+        }
+      }
+    );
+  },
+
   template: `
-  <div :products="products" :loading="loading">
-    <div v-if="loading">Loading please wait...</div>
-    <div v-else>
-     <div class="row align-items-center text-center">
-     <iconbar></iconbar>
-      <div class="col-md-11">
-        <h1>{{products[$route.params.id].title}}</h1>
-        <p>{{products[$route.params.id].text}}</p>
+  <div :products="products" :loading="loading" class="p-3 mb-3">
+     <div class="row align-items-center">
+      <div v-if="!video" class="col pt-3 product p-5 rounded-custom" :style="css">
+        <div class="col-lg-7 producttext rounded-custom">
+          <h1 >{{products[$route.params.id].title}}</h1>
+          <p>{{products[$route.params.id].text}}</p>
+          <router-link :to="{ name: 'ProductVideo',params:{id:$route.params.id}}">
+            <button v-if="products[$route.params.id].video" type="button" class="btn btn-custom-product rounded-custom me-4 mt-5"><i class="bi bi-play-circle"></i>&nbsp AFSPIL VIDEO
+            </button>
+          </router-link>
+          <a v-if="products[$route.params.id].article" :href="articlesrc" target="_blank" class="btn btn-custom-product rounded-custom me-4 mt-5" download><i class="bi bi-file-earmark-pdf"></i>&nbsp Hent artikel</a>
+        </div>
+        <div class="col-lg-5">
+        </div>
       </div>
     </div>
-    </div>
+    <div v-if="video" class="col mt-5 p-5 rounded-custom align-items-center" :style="css">
+        <h1 >{{products[$route.params.id].title}}</h1>
+        <div class="iframediv ratio ratio-16x9 rounded-custom">
+          <iframe
+            class="rounded-custom"
+            :src="videosrc"
+            frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope;"
+            allowfullscreen>
+          </iframe>
+        </div>
+      </div>
   </div>`,
 };
 
@@ -51,16 +109,19 @@ const routes = [
     component: Home,
   },
   { name: "Product", path: "/products/:id", component: Product },
+  { name: "ProductVideo", path: "/products/:id/video", component: Product },
+
+  // { path: "*", component: Home },
 ];
 
 const router = VueRouter.createRouter({
-  history: VueRouter.createWebHashHistory(),
+  history: VueRouter.createWebHistory(),
   routes, // short for `routes: routes`
 });
 
 // Components
 
-//Top bar
+//Logo + søgefelt
 const Navigation = {
   name: "Navigation",
   props: {},
@@ -98,7 +159,7 @@ const Navigation = {
   `,
 };
 
-//Btngroup
+//Kategori og materialeknapper
 const Btngroup = {
   name: "Btngroup",
   props: {
@@ -114,95 +175,17 @@ const Btngroup = {
   <div class="btn-group d-flex text-center" role="group" aria-label="Basic example">
     <div class="col d-sm-flex justify-content-center">
         <span v-for="material in materials.slice(0,8)" v-if="materials">
-          <button type="button" class="btn btn-primary btn-custom me-4 rounded-pill">{{material}}</button>
+          <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{material}}</button>
         </span>
          <span v-for="category in categories.slice(0,10)" v-if="categories">
-          <button type="button" class="btn btn-primary btn-custom me-4 rounded-pill">{{category}}</button>
+          <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{category}}</button>
         </span>
     </div>
   </div>
   `,
 };
 
-//Carousel
-const Carousel = {
-  name: "Carousel",
-  props: {
-    products: { type: Array },
-    loading: { type: Boolean },
-  },
-  data() {
-    return {
-      tempImg: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
-    };
-  },
-  methods: {
-    log(item) {
-      console.log(item);
-    },
-  },
-  template: `   
-    <h5 v-if="loading">Loading please wait...</h5>
-    <div v-else id="carouselExampleCaptions" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="10000">
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
-      </div>
-      <div class="carousel-inner border-0 rounded-custom">
-        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
-          <img :src="product.img1" class="d-block w-100 border-0 rounded-custom" alt="...">
-          <router-link :to="{ name: 'Product',params:{id:product.id}}">
-
-          <div class="carousel-caption d-block border-0 rounded-custom">
-            <h5 v-if="loading">Loading please wait...</h5>
-            <span v-else>
-              <h5>{{product.author}}</h5>
-              <p>{{product.title}}</p>
-            </span>
-          </div>
-          </router-link>
-        </div>
-      </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-    </div>
-  `,
-};
-
-//Card
-const Card = {
-  name: "Card",
-  props: {
-    // data: Object,
-    cards: Array,
-  },
-  data() {
-    return {};
-  },
-  methods: {},
-  template: `
-  <div class="row row-cols-1 row-cols-lg-5 g-4 mt-3">
-    <div class="col" v-for="card in cards">
-      <div class="card text-white bg-dark border-2 h-100">
-        <img :src="card.img" class="card-img-top" alt="...">
-        <div class="card-body">
-          <h5 class="card-title">{{card.title}}</h5>
-          <p class="card-text">{{card.text}}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  `,
-};
-
-//Navbar og Btngrp kombineret
+//Logo, søgefelt og knapper kombineret
 
 const Topbar = {
   name: "Topbar",
@@ -242,7 +225,7 @@ const Topbar = {
   },
   template: `
   <div class="container-fluid p-0">
-    <div class="row">
+    <div class="row align-items-center">
       <div class="col-xl-6">
         <navigation></navigation>
       </div>
@@ -257,8 +240,8 @@ const Topbar = {
 
 //Sidebar ikoner
 
-const Iconbar = {
-  name: "Iconbar",
+const Sidebar = {
+  name: "Sidebar",
   props: {
     // loading: { type: Boolean },
     // products: { type: Array },
@@ -272,20 +255,72 @@ const Iconbar = {
     },
   },
   template: `
-  <div class="col-md-1">
-    <i class="bi bi-heart d-md-block m-5 m-md-0"></i>
-    <i class="bi bi-calendar d-md-block mt-md-5 mb-md-5 mt-0 mtb-0"></i>
-    <i class="bi bi-share d-md-block m-5 m-md-0"></i>
+  <div class="col-md-1 pt-3 text-center mt-5">
+    <i class="bi bi-heart d-md-block m-5 m-md-0 sidebar-icons "></i>
+    <i class="bi bi-calendar d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
+    <i class="bi bi-share d-md-block m-5 m-md-0 sidebar-icons"></i>
   </div>
   `,
 };
 
-//Alt udskifteligt indhold i denne
-const Content = {
-  name: "Content",
+//Carousel
+const Carousel = {
+  name: "Carousel",
   props: {
-    loading: { type: Boolean },
     products: { type: Array },
+    loading: { type: Boolean },
+  },
+  data() {
+    return {
+      // tempImg: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
+      isLoaded: false,
+    };
+  },
+  methods: {
+    log(item) {
+      console.log(item);
+    },
+    onImgLoad() {
+      this.isLoaded = true;
+    },
+  },
+  template: `  
+    <div id="carouselExampleCaptions" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="10000">
+      <div v-if="isLoaded" class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="3" aria-label="Slide 4"></button>
+      </div>
+      <div class="carousel-inner border-0 rounded-custom">
+        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
+          <img :src="product.img1" class="d-block w-100 border-0 rounded-custom" alt="..." @load="onImgLoad">
+          <router-link :to="{ name: 'Product',params:{id:product.id}}">
+            <div class="carousel-caption d-block border-0 rounded-custom"> 
+              <h5>{{product.author}}</h5>
+              <p>{{product.title}}</p>
+            </div>
+          </router-link>
+        </div>
+      </div>
+      <button v-if="isLoaded" class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button v-if="isLoaded" class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  `,
+};
+
+//Card group
+const Cardgroup = {
+  name: "Cardgroup",
+  props: {
+    // data: Object,
+    // cards: Array,
   },
   data() {
     return {
@@ -294,26 +329,31 @@ const Content = {
           img: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
           title: "Byggekoordinator",
           text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          id: 0,
         },
         {
           img: "/images/KEAprodukter/fashion.jpg",
           title: "Fashion",
           text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          id: 1,
         },
         {
           img: "/images/KEAprodukter/podcast.jpg",
           title: "Podcast",
           text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          id: 2,
         },
         {
           img: "/images/KEAprodukter/knibestribe.png",
           title: "Knibestriben",
           text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          id: 1,
         },
         {
           img: "/images/KEAprodukter/balslev.png",
           title: "Kritik af den digitale fornuft",
           text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          id: 1,
         },
       ],
     };
@@ -324,17 +364,69 @@ const Content = {
     },
   },
   template: `
-  <div class="container p-0">
-    <div class="row align-items-center text-center">
-      <div class="col-md-11">
-        <carousel :products="products" :loading="loading"/>
-      </div>
+  <div class="row row-cols-1 row-cols-lg-5 g-4">
+    <div class="col" v-for="card in cards">
+      <router-link :to="{ name: 'Product',params:{id:card.id}}">
+        <div class="card text-white bg-dark border-2 h-100">
+          <img :src="card.img" class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">{{card.title}}</h5>
+            <p class="card-text">{{card.text}}</p>
+          </div>
+        </div>
+      </router-link>
     </div>
   </div>
-  <div class="container p-0">
-    <card :cards="cards"></card>
+  `,
+};
+
+//Alt indhold i denne
+const Wrapper = {
+  name: "Wrapper",
+  props: {
+    loading: { type: Boolean },
+    products: { type: Array },
+  },
+  data() {
+    return {};
+  },
+  methods: {
+    log(item) {
+      console.log(item);
+    },
+    homePage() {
+      if (this.$route.path == "/" || this.$route.path == "/home") {
+        return true;
+      } else {
+        return false;
+      }
+    },
+  },
+  template: `
+  <div>
+      <topbar></topbar>
+      <div class="row">
+        <sidebar></sidebar>
+        <div v-if="loading" style="min-height: 37rem;" class="col d-flex align-items-center justify-content-center">
+          <h5>Loading please wait...</h5>
+        </div>
+        <router-view v-else class="col" style="min-height: 35.5rem;"
+          :products="products"
+          :loading="loading"
+          v-slot="{ Component,route }"
+         
+        >
+          <transition name="fade" mode="out-in">
+            <div :key="route.fullPath" class="col">
+              <component :is="Component"/>
+            </div>
+          </transition>
+        </router-view>
+      </div>
+      <transition name="fade" mode="out-in">
+        <cardgroup v-if="homePage() && !loading"></cardgroup>
+      </transition>
   </div>
- 
   `,
 };
 
@@ -347,41 +439,6 @@ const app = Vue.createApp({
       products: [],
       fetchUrl:
         "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios?limit=10&offset=0&apikey=l8xxf96f99c580364be08333d1a57b4af036",
-      // products: [
-      //   {
-      //     image1: "/images/KEAprodukter/balslev.png",
-      //     title: "Kritik af den digital fornuft",
-      //     subtext: "Et KEA produkt af",
-      //     text: "Lorem ipsum...",
-      //     author1: "Jesper Balslev",
-      //     video1: "",
-      //     press: "",
-      //   },
-      //   {
-      //     image1: "/images/KEAprodukter/knibestribe.png",
-      //     title: "Knibestriben",
-      //     subtext: "Et KEA produkt af",
-      //     text: "Lorem ipsum...",
-      //     author1: "Per Halstrøm",
-      //     video1: "zBr_ozl_Tgg",
-      //     press: "",
-      //   },
-      //   {
-      //     image1:
-      //       "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
-      //     // title: this.data.portfolio[0].resource_metadata.title,
-      //     // subtext: this.data.portfolio[0].id,
-      //     title:
-      //       this.data !== null
-      //         ? "ping"
-      //         : this.data.portfolio[0].resource_metadata.title,
-      //     subtext: "Et KEA produkt af",
-      //     text: "Lorem ipsum...",
-      //     author1: "Jan Johannson",
-      //     video1: "",
-      //     press: "",
-      //   },
-      // ],
     };
   },
   computed: {},
@@ -417,6 +474,7 @@ const app = Vue.createApp({
         img1: parsedData[10],
         img2: parsedData[11],
         img3: parsedData[12],
+        article: parsedData[13],
         id: this.products.length,
       });
     },
@@ -456,13 +514,12 @@ const app = Vue.createApp({
   },
 })
 
-  .component("Content", Content)
+  .component("Wrapper", Wrapper)
   .component("Navigation", Navigation)
   .component("Btngroup", Btngroup)
   .component("Carousel", Carousel)
-  .component("Card", Card)
+  .component("Cardgroup", Cardgroup)
   .component("Topbar", Topbar)
-  .component("Iconbar", Iconbar)
-  // .component("Home", Home)
+  .component("Sidebar", Sidebar)
   .use(router)
   .mount("#app");
