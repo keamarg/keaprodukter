@@ -28,11 +28,9 @@ const Product = {
       return `https://www.youtube.com/embed/${
         this.products[this.$route.params.id].video
       }?autoplay=1`;
-      return this.products[this.$route.params.id].video;
     },
     articlesrc() {
       return `${this.products[this.$route.params.id].article}`;
-      return this.products[this.$route.params.id].video;
     },
   },
   data() {
@@ -41,12 +39,12 @@ const Product = {
         textAlign: "left",
         color: "white",
         background:
-          "linear-gradient(0.25turn, rgba(0,0,0,0.8), rgba(0,0,0,0.6),rgba(0,0,0,0.2), rgba(0,0,0,0.0)),url(" +
+          "linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.9),rgba(0,0,0,0.8),rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url(" +
           this.products[this.$route.params.id].img1 +
           "), no-repeat",
         backgroundSize: "cover",
         fontSize: "16px",
-        // minHeight: "70rem",
+        minHeight: "60rem",
       },
     };
   },
@@ -276,6 +274,11 @@ const Carousel = {
       isLoaded: false,
     };
   },
+  computed: {
+    filteredProducts: function () {
+      return this.products.slice(0, 3);
+    },
+  },
   methods: {
     log(item) {
       console.log(item);
@@ -290,10 +293,9 @@ const Carousel = {
         <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
         <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
         <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
-        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="3" aria-label="Slide 4"></button>
       </div>
       <div class="carousel-inner border-0 rounded-custom">
-        <div v-for="(product,index) in products" class="carousel-item" :class="{active:index==0}">
+        <div v-for="(product,index) in filteredProducts" class="carousel-item" :class="{active:index==0}">
           <img :src="product.img1" class="d-block w-100 border-0 rounded-custom" alt="..." @load="onImgLoad">
           <router-link :to="{ name: 'Product',params:{id:product.id}}">
             <div class="carousel-caption d-block border-0 rounded-custom"> 
@@ -319,43 +321,43 @@ const Carousel = {
 const Cardgroup = {
   name: "Cardgroup",
   props: {
-    // data: Object,
-    // cards: Array,
+    products: { type: Array },
+    loading: { type: Boolean },
   },
   data() {
     return {
-      cards: [
-        {
-          img: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
-          title: "Byggekoordinator",
-          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-          id: 0,
-        },
-        {
-          img: "/images/KEAprodukter/fashion.jpg",
-          title: "Fashion",
-          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-          id: 1,
-        },
-        {
-          img: "/images/KEAprodukter/podcast.jpg",
-          title: "Podcast",
-          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-          id: 2,
-        },
-        {
-          img: "/images/KEAprodukter/knibestribe.png",
-          title: "Knibestriben",
-          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-          id: 1,
-        },
-        {
-          img: "/images/KEAprodukter/balslev.png",
-          title: "Kritik af den digitale fornuft",
-          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-          id: 1,
-        },
-      ],
+      // cards: [
+      //   {
+      //     img: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
+      //     title: "Byggekoordinator",
+      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      //     id: 0,
+      //   },
+      //   {
+      //     img: "/images/KEAprodukter/fashion.jpg",
+      //     title: "Fashion",
+      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      //     id: 1,
+      //   },
+      //   {
+      //     img: "/images/KEAprodukter/podcast.jpg",
+      //     title: "Podcast",
+      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      //     id: 2,
+      //   },
+      //   {
+      //     img: "/images/KEAprodukter/knibestribe.png",
+      //     title: "Knibestriben",
+      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      //     id: 1,
+      //   },
+      //   {
+      //     img: "/images/KEAprodukter/balslev.png",
+      //     title: "Kritik af den digitale fornuft",
+      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      //     id: 1,
+      //   },
+      // ],
     };
   },
   methods: {
@@ -365,13 +367,13 @@ const Cardgroup = {
   },
   template: `
   <div class="row row-cols-1 row-cols-lg-5 g-4">
-    <div class="col" v-for="card in cards">
+    <div class="col" v-for="card in products">
       <router-link :to="{ name: 'Product',params:{id:card.id}}">
         <div class="card text-white bg-dark border-2 h-100">
-          <img :src="card.img" class="card-img-top" alt="...">
+          <img :src="card.img1" class="card-img-top" alt="...">
           <div class="card-body">
             <h5 class="card-title">{{card.title}}</h5>
-            <p class="card-text">{{card.text}}</p>
+            <p class="card-text">{{card.subtitle}}</p>
           </div>
         </div>
       </router-link>
@@ -424,14 +426,14 @@ const Wrapper = {
         </router-view>
       </div>
       <transition name="fade" mode="out-in">
-        <cardgroup v-if="homePage() && !loading"></cardgroup>
+        <cardgroup v-if="homePage() && !loading" :products="products" :loading="loading"></cardgroup>
       </transition>
   </div>
   `,
 };
 
-// app
-const app = Vue.createApp({
+//keaprodukter
+const KeaProdukter = {
   setup() {},
   data() {
     return {
@@ -447,34 +449,38 @@ const app = Vue.createApp({
       console.log(item);
     },
     parseProducts(data) {
-      // parse xml inspireret af https://www.c-sharpcorner.com/blogs/get-data-from-xml-content-using-javascript
+      // parse xml inspireret af https://www.c-sharpcorner.com/blogs/get-data-from-xml-content-using-javascript burde nok udskiftes med en Vue version, som bruger virtual DOM
       parser = new DOMParser();
       xmlDoc = parser.parseFromString(data.anies, "text/xml");
 
       var x = xmlDoc.getElementsByTagName("datafield");
       const parsedData = [];
       for (i = 0; i < x.length; i++) {
-        parsedData[i] =
-          x[i].getElementsByTagName("subfield")[0].childNodes[0].nodeValue;
+        const keywords = Object.values(
+          x[i].getElementsByTagName("subfield")
+        ).map(function (value, index) {
+          return value.innerHTML;
+        });
+        parsedData[i] = keywords;
       }
 
       // Object.assign for at beholde reactivity
       const parsedProduct = [];
       this.products[this.products.length] = Object.assign({}, parsedProduct, {
-        author: parsedData[0],
-        title: parsedData[1],
-        subtitle: parsedData[2],
-        text: parsedData[3],
-        keywords: parsedData[4],
-        author2: parsedData[5],
-        author3: parsedData[6],
-        links: parsedData[7],
-        video: parsedData[8],
-        video2: parsedData[9],
-        img1: parsedData[10],
-        img2: parsedData[11],
-        img3: parsedData[12],
-        article: parsedData[13],
+        author: parsedData[0][0],
+        title: parsedData[1][0],
+        subtitle: parsedData[2][0],
+        text: parsedData[3][0],
+        keywords: parsedData[4][0],
+        author2: parsedData[5][0],
+        author3: parsedData[6][0],
+        links: parsedData[7][0],
+        video: parsedData[8][0],
+        video2: parsedData[9][0],
+        img1: parsedData[10][0],
+        img2: parsedData[11][0],
+        img3: parsedData[12][0],
+        article: parsedData[13][0],
         id: this.products.length,
       });
     },
@@ -512,7 +518,10 @@ const app = Vue.createApp({
   mounted() {
     this.fetchData(this.fetchUrl);
   },
-})
+};
+
+// app
+const app = Vue.createApp(KeaProdukter)
 
   .component("Wrapper", Wrapper)
   .component("Navigation", Navigation)
