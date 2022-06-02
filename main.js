@@ -3,15 +3,7 @@
 const Home = {
   name: "Home",
   props: ["products", "loading"],
-  methods: {
-    goToDashboard() {
-      if (isAuthenticated) {
-        this.$router.push("/dashboard");
-      } else {
-        this.$router.push("/login");
-      }
-    },
-  },
+  methods: {},
   template: `
       <carousel :products="products" :loading="loading"/>
   `,
@@ -32,10 +24,17 @@ const Product = {
     articlesrc() {
       return `${this.products[this.$route.params.id].article}`;
     },
-  },
-  data() {
-    return {
-      css: {
+
+    filteredProducts() {
+      return this.products.filter((product) =>
+        product.keywords.some(
+          (keyword) =>
+            keyword.toLowerCase() == this.$route.params.id.toLowerCase()
+        )
+      );
+    },
+    css() {
+      return {
         textAlign: "left",
         color: "white",
         background:
@@ -45,7 +44,23 @@ const Product = {
         backgroundSize: "cover",
         fontSize: "16px",
         minHeight: "60rem",
-      },
+      };
+    },
+  },
+
+  data() {
+    return {
+      // css: {
+      //   textAlign: "left",
+      //   color: "white",
+      //   background:
+      //     "linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.9),rgba(0,0,0,0.8),rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url(" +
+      //     this.products[this.$route.params.id].img1 +
+      //     "), no-repeat",
+      //   backgroundSize: "cover",
+      //   fontSize: "16px",
+      //   minHeight: "60rem",
+      // },
     };
   },
   methods: {
@@ -54,49 +69,73 @@ const Product = {
     },
   },
   created() {
-    this.$watch(
-      () => this.$route.params,
-      (toParams, previousParams) => {
-        if (this.products[toParams.id]) {
-          this.css.backgroundImage =
-            "linear-gradient(0.25turn, rgba(0,0,0,0.8), rgba(0,0,0,0.6),rgba(0,0,0,0.3), rgba(0,0,0,0.0)),url(" +
-            this.products[toParams.id].img1 +
-            ")";
-        }
-      }
-    );
+    // this.$watch(
+    //   () => this.$route.params,
+    //   (toParams, previousParams) => {
+    //     if (this.products[toParams.id]) {
+    //       this.css.backgroundImage =
+    //         "linear-gradient(0.25turn, rgba(0,0,0,0.8), rgba(0,0,0,0.6),rgba(0,0,0,0.3), rgba(0,0,0,0.0)),url(" +
+    //         this.products[toParams.id].img1 +
+    //         ")";
+    //     }
+    //   }
+    // );
   },
 
   template: `
   <div :products="products" :loading="loading" class="p-3 mb-3">
-     <div class="row align-items-center">
-      <div v-if="!video" class="col pt-3 product p-5 rounded-custom" :style="css">
-        <div class="col-lg-7 producttext rounded-custom">
-          <h1 >{{products[$route.params.id].title}}</h1>
-          <p>{{products[$route.params.id].text}}</p>
-          <router-link :to="{ name: 'ProductVideo',params:{id:$route.params.id}}">
-            <button v-if="products[$route.params.id].video" type="button" class="btn btn-custom-product rounded-custom me-4 mt-5"><i class="bi bi-play-circle"></i>&nbsp AFSPIL VIDEO
-            </button>
-          </router-link>
-          <a v-if="products[$route.params.id].article" :href="articlesrc" target="_blank" class="btn btn-custom-product rounded-custom me-4 mt-5" download><i class="bi bi-file-earmark-pdf"></i>&nbsp Hent artikel</a>
-        </div>
-        <div class="col-lg-5">
-        </div>
+  <div class="row align-items-center">
+    <template v-if="$route.params.type">
+          <Cardgroup v-if="filteredProducts.length>0" :products="filteredProducts"/>
+          <div v-else>Nothing here...</div>
+    </template>
+    <div
+      v-else-if="!video"
+      class="col pt-3 product p-5 rounded-custom"
+      :style="css"
+    >
+      <div class="col-lg-7 producttext rounded-custom">
+        <h1>{{ products[$route.params.id].title }}</h1>
+        <p>{{ products[$route.params.id].text }}</p>
+        <router-link :to="{ name: 'ProductVideo',params:{id:$route.params.id}}">
+          <button
+            v-if="products[$route.params.id].video"
+            type="button"
+            class="btn btn-custom-product rounded-custom me-4 mt-5"
+          >
+            <i class="bi bi-play-circle"></i>&nbsp AFSPIL VIDEO
+          </button>
+        </router-link>
+        <a
+          v-if="products[$route.params.id].article"
+          :href="articlesrc"
+          target="_blank"
+          class="btn btn-custom-product rounded-custom me-4 mt-5"
+          download
+          ><i class="bi bi-file-earmark-pdf"></i>&nbsp Hent artikel</a
+        >
+      </div>
+      <div class="col-lg-5"></div>
+    </div>
+    <div
+      v-else-if="video"
+      class="col mt-5 p-5 rounded-custom align-items-center"
+      :style="css"
+    >
+      <h1>{{ products[$route.params.id].title }}</h1>
+      <div class="iframediv ratio ratio-16x9 rounded-custom">
+        <iframe
+          class="rounded-custom"
+          :src="videosrc"
+          frameborder="0"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope;"
+          allowfullscreen
+        >
+        </iframe>
       </div>
     </div>
-    <div v-if="video" class="col mt-5 p-5 rounded-custom align-items-center" :style="css">
-        <h1 >{{products[$route.params.id].title}}</h1>
-        <div class="iframediv ratio ratio-16x9 rounded-custom">
-          <iframe
-            class="rounded-custom"
-            :src="videosrc"
-            frameborder="0"
-            allow="accelerometer; autoplay; encrypted-media; gyroscope;"
-            allowfullscreen>
-          </iframe>
-        </div>
-      </div>
-  </div>`,
+  </div>
+</div>`,
 };
 
 //Routes
@@ -161,7 +200,6 @@ const Navigation = {
 const Btngroup = {
   name: "Btngroup",
   props: {
-    // size: Number,
     materials: Array,
     categories: Array,
   },
@@ -172,11 +210,15 @@ const Btngroup = {
   template: `
   <div class="btn-group d-flex text-center" role="group" aria-label="Basic example">
     <div class="col d-sm-flex justify-content-center">
-        <span v-for="material in materials.slice(0,8)" v-if="materials">
-          <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{material}}</button>
+        <span v-for="(material,index) in materials.slice(0,8)" v-if="materials">
+          <router-link :to="{ name: 'Product',params:{id:material,type:'productlist'}}">
+            <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{material}}</button>
+          </router-link>
         </span>
-         <span v-for="category in categories.slice(0,10)" v-if="categories">
-          <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{category}}</button>
+        <span v-for="category in categories.slice(0,10)" v-if="categories">
+          <router-link :to="{ name: 'Product',params:{id:category, type:'productlist'}}">
+            <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{category}}</button>
+          </router-link>
         </span>
     </div>
   </div>
@@ -187,10 +229,7 @@ const Btngroup = {
 
 const Topbar = {
   name: "Topbar",
-  props: {
-    // loading: { type: Boolean },
-    // products: { type: Array },
-  },
+  props: {},
   data() {
     return {
       materials: [
@@ -240,10 +279,7 @@ const Topbar = {
 
 const Sidebar = {
   name: "Sidebar",
-  props: {
-    // loading: { type: Boolean },
-    // products: { type: Array },
-  },
+  props: {},
   data() {
     return {};
   },
@@ -325,40 +361,7 @@ const Cardgroup = {
     loading: { type: Boolean },
   },
   data() {
-    return {
-      // cards: [
-      //   {
-      //     img: "https://kea.dk/slir/w2200-c100x72/images/news/2021/12/Byg.jpeg",
-      //     title: "Byggekoordinator",
-      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      //     id: 0,
-      //   },
-      //   {
-      //     img: "/images/KEAprodukter/fashion.jpg",
-      //     title: "Fashion",
-      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      //     id: 1,
-      //   },
-      //   {
-      //     img: "/images/KEAprodukter/podcast.jpg",
-      //     title: "Podcast",
-      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      //     id: 2,
-      //   },
-      //   {
-      //     img: "/images/KEAprodukter/knibestribe.png",
-      //     title: "Knibestriben",
-      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      //     id: 1,
-      //   },
-      //   {
-      //     img: "/images/KEAprodukter/balslev.png",
-      //     title: "Kritik af den digitale fornuft",
-      //     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      //     id: 1,
-      //   },
-      // ],
-    };
+    return {};
   },
   methods: {
     log(item) {
@@ -440,7 +443,7 @@ const KeaProdukter = {
       loading: true,
       products: [],
       fetchUrl:
-        "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios?limit=10&offset=0&apikey=l8xxf96f99c580364be08333d1a57b4af036",
+        "https://alma-proxy.herokuapp.com/almaws/v1/electronic/e-collections/6186840000007387/e-services/6286839990007387/portfolios?limit=500&offset=0&apikey=l8xxf96f99c580364be08333d1a57b4af036",
     };
   },
   computed: {},
@@ -456,12 +459,12 @@ const KeaProdukter = {
       var x = xmlDoc.getElementsByTagName("datafield");
       const parsedData = [];
       for (i = 0; i < x.length; i++) {
-        const keywords = Object.values(
+        const subfieldData = Object.values(
           x[i].getElementsByTagName("subfield")
         ).map(function (value, index) {
           return value.innerHTML;
         });
-        parsedData[i] = keywords;
+        parsedData[i] = subfieldData;
       }
 
       // Object.assign for at beholde reactivity
@@ -471,7 +474,7 @@ const KeaProdukter = {
         title: parsedData[1][0],
         subtitle: parsedData[2][0],
         text: parsedData[3][0],
-        keywords: parsedData[4][0],
+        keywords: parsedData[4],
         author2: parsedData[5][0],
         author3: parsedData[6][0],
         links: parsedData[7][0],
