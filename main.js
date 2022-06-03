@@ -161,7 +161,9 @@ const router = VueRouter.createRouter({
 //Logo + søgefelt
 const Navigation = {
   name: "Navigation",
-  props: {},
+  props: {
+    products: Array,
+  },
   data() {
     return {
       imgcss: {
@@ -177,8 +179,18 @@ const Navigation = {
         // "padding-bottom": "0rem",
         // "margin-bottom": "0rem",
       },
+      search: "",
     };
   },
+  // computed: {
+  //   filteredList() {
+  //     return this.products.filter((product) =>
+  //       product.keywords.some(
+  //         (keyword) => keyword.toLowerCase() == this.search.toLowerCase()
+  //       )
+  //     );
+  //   },
+  // },
   methods: {},
   template: `
     <nav class="navbar justify-content-start">
@@ -188,10 +200,11 @@ const Navigation = {
             <p :style="titlecss" class="d-inline ps-2 m-0">Produkter</p>
           </div>
         </router-link>
-        <form class="d-flex w-50" action="https://api.agify.io" method="GET">
-          <input name="name" value="" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
-          <button class="searchBtn btn btn-outline-light" type="submit">&nbsp;Søg&nbsp;</button>
-        </form>
+        <div class="d-flex w-50">
+          <input v-model="search" name="name" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
+          <button @click="$router.push({ name: 'Product',params:{id:search,type:'productlist'}})" class="searchBtn btn btn-outline-light" type="button">&nbsp;Søg&nbsp;</button>
+        </div>
+
     </nav>
   `,
 };
@@ -229,7 +242,9 @@ const Btngroup = {
 
 const Topbar = {
   name: "Topbar",
-  props: {},
+  props: {
+    products: Array,
+  },
   data() {
     return {
       materials: [
@@ -264,7 +279,7 @@ const Topbar = {
   <div class="container-fluid p-0">
     <div class="row align-items-center">
       <div class="col-xl-6">
-        <navigation></navigation>
+        <navigation :products="products"></navigation>
       </div>
       <div class="col-xl-6">
         <btngroup :materials="materials"></btngroup>
@@ -370,7 +385,7 @@ const Cardgroup = {
   },
   template: `
   <div class="row row-cols-1 row-cols-lg-5 g-4">
-    <div class="col" v-for="card in products">
+    <div class="col" v-for="card in products.slice(0,10)">
       <router-link :to="{ name: 'Product',params:{id:card.id}}">
         <div class="card text-white bg-dark border-2 h-100">
           <img :src="card.img1" class="card-img-top" alt="...">
@@ -409,7 +424,7 @@ const Wrapper = {
   },
   template: `
   <div>
-      <topbar></topbar>
+      <topbar :products="products"></topbar>
       <div class="row">
         <sidebar></sidebar>
         <div v-if="loading" style="min-height: 37rem;" class="col d-flex align-items-center justify-content-center">
@@ -419,7 +434,6 @@ const Wrapper = {
           :products="products"
           :loading="loading"
           v-slot="{ Component,route }"
-         
         >
           <transition name="fade" mode="out-in">
             <div :key="route.fullPath" class="col">
