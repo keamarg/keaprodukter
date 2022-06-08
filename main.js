@@ -1,5 +1,6 @@
 //Router components
 
+//view til forsiden
 const Home = {
   name: "Home",
   props: ["products", "loading"],
@@ -9,6 +10,7 @@ const Home = {
   `,
 };
 
+//view til produktvisning (præsentationsside, videoside, søgningsside osv., burde måske deles op...)
 const Product = {
   name: "Product",
   props: ["products", "loading"],
@@ -25,11 +27,13 @@ const Product = {
       return `${this.products[this.$route.params.id].article}`;
     },
 
+    //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
     filteredProducts() {
       return this.products.filter((product) =>
         product.keywords.some(
           (keyword) =>
-            keyword.toLowerCase() == this.$route.params.id.toLowerCase()
+            keyword.slice(0, 3).toLowerCase() ==
+            this.$route.params.id.slice(0, 3).toLowerCase()
         )
       );
     },
@@ -163,6 +167,7 @@ const Navigation = {
   name: "Navigation",
   props: {
     products: Array,
+    // searchQuery: String,
   },
   data() {
     return {
@@ -179,32 +184,38 @@ const Navigation = {
         // "padding-bottom": "0rem",
         // "margin-bottom": "0rem",
       },
-      search: "",
+      searchQuery: null,
     };
   },
-  // computed: {
-  //   filteredList() {
-  //     return this.products.filter((product) =>
-  //       product.keywords.some(
-  //         (keyword) => keyword.toLowerCase() == this.search.toLowerCase()
-  //       )
-  //     );
-  //   },
-  // },
-  methods: {},
+  computed: {
+    filteredList() {
+      if (this.searchQuery)
+        return this.products.filter((product) =>
+          product.keywords.some(
+            (keyword) =>
+              keyword.slice(0, this.searchQuery.length).toLowerCase() ==
+              this.searchQuery.toLowerCase()
+          )
+        );
+    },
+  },
+  methods: {
+    updateSearchQuery() {
+      console.log("navigationPing");
+      this.$emit("updateSearchQuery", this.searchQuery, this.filteredList);
+    },
+  },
   template: `
     <nav class="navbar justify-content-start">
-        <router-link :to="{ name: 'Home'}">
+        <router-link :to="{ name: 'Home'}" @click="searchQuery=''">
           <div class="navbar-brand p-0 d-flex align-items-center">
             <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEA_logo_EN_Web_red.png" :style="imgcss" class="logo d-inline" alt="">
             <p :style="titlecss" class="d-inline ps-2 m-0">Produkter</p>
           </div>
         </router-link>
         <div class="d-flex w-50">
-          <input v-model="search" name="name" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
-          <button @click="$router.push({ name: 'Product',params:{id:search,type:'productlist'}})" class="searchBtn btn btn-outline-light" type="button">&nbsp;Søg&nbsp;</button>
+          <input @input="updateSearchQuery" v-model="searchQuery" name="name" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
         </div>
-
     </nav>
   `,
 };
@@ -268,18 +279,26 @@ const Topbar = {
         // "newCat1",
         // "newCat2",
       ],
+      searchQuery: null,
+      filteredList: [],
     };
   },
   methods: {
     log(item) {
       console.log(item);
     },
+    updateSearchQuery(value1, value2) {
+      console.log("topbarping");
+      this.searchQuery = value1;
+      this.filteredList = value2;
+      this.$emit("updateSearchQuery", this.searchQuery, this.filteredList);
+    },
   },
   template: `
   <div class="container-fluid p-0">
     <div class="row align-items-center">
       <div class="col-xl-6">
-        <navigation :products="products"></navigation>
+        <navigation @updateSearchQuery="updateSearchQuery" :products="products"></navigation>
       </div>
       <div class="col-xl-6">
         <btngroup :materials="materials"></btngroup>
@@ -408,11 +427,19 @@ const Wrapper = {
     products: { type: Array },
   },
   data() {
-    return {};
+    return {
+      searchQuery: null,
+      filteredList: [],
+    };
   },
   methods: {
     log(item) {
       console.log(item);
+    },
+    updateSearchQuery(value1, value2) {
+      console.log("wrapperping");
+      this.searchQuery = value1;
+      this.filteredList = value2;
     },
     homePage() {
       if (this.$route.path == "/" || this.$route.path == "/home") {
@@ -424,10 +451,11 @@ const Wrapper = {
   },
   template: `
   <div>
-      <topbar :products="products"></topbar>
+      <topbar :products="products" @updateSearchQuery="updateSearchQuery"></topbar>
       <div class="row">
         <sidebar></sidebar>
-        <div v-if="loading" style="min-height: 37rem;" class="col d-flex align-items-center justify-content-center">
+        <cardgroup v-if="filteredList.length>0 && filteredList != undefined" :products="filteredList"/>
+        <div v-else-if="loading" style="min-height: 37rem;" class="col d-flex align-items-center justify-content-center">
           <h5>Loading please wait...</h5>
         </div>
         <router-view v-else class="col" style="min-height: 35.5rem;"
@@ -443,7 +471,7 @@ const Wrapper = {
         </router-view>
       </div>
       <transition name="fade" mode="out-in">
-        <cardgroup v-if="homePage() && !loading" :products="products" :loading="loading"></cardgroup>
+        <cardgroup v-if="homePage() && !loading && filteredList.length==0" :products="products" :loading="loading"></cardgroup>
       </transition>
   </div>
   `,
