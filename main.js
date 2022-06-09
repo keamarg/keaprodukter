@@ -1,5 +1,6 @@
 //Router components
 
+//view til forsiden
 const Home = {
   name: "Home",
   props: ["products", "loading"],
@@ -9,6 +10,7 @@ const Home = {
   `,
 };
 
+//view til produktvisning (præsentationsside, videoside, søgningsside osv., burde måske deles op...)
 const Product = {
   name: "Product",
   props: ["products", "loading"],
@@ -25,13 +27,27 @@ const Product = {
       return `${this.products[this.$route.params.id].article}`;
     },
 
+    //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
+    // filteredProducts() {
+    //   return this.products.filter((product) =>
+    //     product.keywords.some(
+    //       (keyword) =>
+    //         keyword.slice(0, 3).toLowerCase() ==
+    //         this.$route.params.id.slice(0, 3).toLowerCase()
+    //     )
+    //   );
+    // },
+
+    //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
     filteredProducts() {
-      return this.products.filter((product) =>
-        product.keywords.some(
-          (keyword) =>
-            keyword.toLowerCase() == this.$route.params.id.toLowerCase()
-        )
-      );
+      if (this.$route.params.id)
+        return this.products.filter((product) =>
+          product.keywords.some(
+            (keyword) =>
+              keyword.slice(0, this.$route.params.id.length).toLowerCase() ==
+              this.$route.params.id.toLowerCase()
+          )
+        );
     },
     css() {
       return {
@@ -85,9 +101,10 @@ const Product = {
   template: `
   <div :products="products" :loading="loading" class="p-3 mb-3">
   <div class="row align-items-center">
-    <template v-if="$route.params.type">
+    <template v-if="$route.params.type"> 
+          <p>Søgning på {{$route.params.id}}...</p>
           <Cardgroup v-if="filteredProducts.length>0" :products="filteredProducts"/>
-          <div v-else>Nothing here...</div>
+          <h5 v-else>ingen resultater</h5>
     </template>
     <div
       v-else-if="!video"
@@ -179,32 +196,79 @@ const Navigation = {
         // "padding-bottom": "0rem",
         // "margin-bottom": "0rem",
       },
-      search: "",
+      searchQuery: null,
+      // keywords: [],
+      filteredKeywords: [],
     };
   },
-  // computed: {
-  //   filteredList() {
-  //     return this.products.filter((product) =>
-  //       product.keywords.some(
-  //         (keyword) => keyword.toLowerCase() == this.search.toLowerCase()
-  //       )
-  //     );
-  //   },
-  // },
-  methods: {},
+  computed: {
+    filteredList() {
+      if (this.searchQuery)
+        return this.products.filter((product) =>
+          product.keywords.some(
+            (keyword) =>
+              keyword.slice(0, this.searchQuery.length).toLowerCase() ==
+              this.searchQuery.toLowerCase()
+          )
+        );
+    },
+
+    //lav liste af unikke keywords til brug under dynamisk søgning
+    keywordList() {
+      keywords = [];
+      this.products.map((product) =>
+        product.keywords.map((keyword) => {
+          if (!keywords.includes(keyword)) {
+            keywords.push(keyword);
+          }
+        })
+      );
+      return keywords;
+    },
+
+    //filtrer keyword listen efter søgefeltet
+    keywordSearchFilter() {
+      let keywords = this.keywordList.filter(
+        (keyword) =>
+          keyword.slice(0, this.searchQuery.length) ==
+          this.searchQuery.slice(0, this.searchQuery.length)
+      );
+      return keywords;
+    },
+  },
+  methods: {
+    updateSearchQuery() {
+      this.$emit("updateSearchQuery", this.searchQuery, this.filteredList);
+    },
+    search(searchQuery) {
+      if (searchQuery) {
+        this.$router.push({
+          name: "Product",
+          params: { id: searchQuery, type: "productlist" },
+        });
+        this.searchQuery = null;
+      }
+    },
+  },
   template: `
     <nav class="navbar justify-content-start">
-        <router-link :to="{ name: 'Home'}">
+        <router-link :to="{ name: 'Home'}" @click="searchQuery=''">
           <div class="navbar-brand p-0 d-flex align-items-center">
             <img src="https://bibliotek.kea.dk/images/KEAprodukter/KEA_logo_EN_Web_red.png" :style="imgcss" class="logo d-inline" alt="">
             <p :style="titlecss" class="d-inline ps-2 m-0">Produkter</p>
           </div>
         </router-link>
         <div class="d-flex w-50">
-          <input v-model="search" name="name" class="searchFld form-control me-2" type="search" placeholder="Søg..." aria-label="Søg">
-          <button @click="$router.push({ name: 'Product',params:{id:search,type:'productlist'}})" class="searchBtn btn btn-outline-light" type="button">&nbsp;Søg&nbsp;</button>
+          <div class="w-100">
+              <input  @input="updateSearchQuery" @keyup.enter="search(searchQuery)" v-model="searchQuery" name="name" class="searchFld form-control me-2" type="searchQuery" autocomplete="off" placeholder="Søg..." aria-label="Søg">
+                <div v-if="searchQuery" class="dropdown w-100">
+                  <div class="dropdown-content w-100">
+                    <p v-for="keyword in keywordSearchFilter" @click="search(keyword)" class="w-100">&nbsp;{{keyword}}</p>
+                </div>
+              </div>
+          </div>
+          <button @click="search(searchQuery)" class="btn-search btn btn-outline-light" type="button">&nbsp;Søg&nbsp;</button>
         </div>
-
     </nav>
   `,
 };
@@ -239,7 +303,6 @@ const Btngroup = {
 };
 
 //Logo, søgefelt og knapper kombineret
-
 const Topbar = {
   name: "Topbar",
   props: {
@@ -274,12 +337,15 @@ const Topbar = {
     log(item) {
       console.log(item);
     },
+    updateSearchQuery(value1, value2) {
+      this.$emit("updateSearchQuery", value1, value2);
+    },
   },
   template: `
   <div class="container-fluid p-0">
     <div class="row align-items-center">
       <div class="col-xl-6">
-        <navigation :products="products"></navigation>
+        <navigation :products="products" @updateSearchQuery="updateSearchQuery"></navigation>
       </div>
       <div class="col-xl-6">
         <btngroup :materials="materials"></btngroup>
@@ -291,7 +357,6 @@ const Topbar = {
 };
 
 //Sidebar ikoner
-
 const Sidebar = {
   name: "Sidebar",
   props: {},
@@ -408,7 +473,9 @@ const Wrapper = {
     products: { type: Array },
   },
   data() {
-    return {};
+    return {
+      filteredList: [],
+    };
   },
   methods: {
     log(item) {
@@ -421,10 +488,13 @@ const Wrapper = {
         return false;
       }
     },
+    updateSearchQuery(value1, value2) {
+      this.filteredList = value2;
+    },
   },
   template: `
   <div>
-      <topbar :products="products"></topbar>
+      <topbar :products="products" @updateSearchQuery="updateSearchQuery"></topbar>
       <div class="row">
         <sidebar></sidebar>
         <div v-if="loading" style="min-height: 37rem;" class="col d-flex align-items-center justify-content-center">
