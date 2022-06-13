@@ -10,6 +10,25 @@ const Home = {
   `,
 };
 
+//view til likes
+const Liked = {
+  name: "Liked",
+  props: ["products", "loading"],
+  computed: {
+    filteredProducts() {
+      console.log(this.products.filter((product) => product.liked));
+      return this.products.filter((product) => product.liked);
+    },
+  },
+  methods: {},
+  template: `
+    <div>
+      <p v-if="filteredProducts.length<1" class="pt-5 ps-5">Du har ikke "liket" nogen produkter...</p>
+      <Cardgroup v-else :products="filteredProducts"/>
+    </div>
+  `,
+};
+
 //view til produktvisning (præsentationsside, videoside, søgningsside osv., burde måske deles op...)
 const Product = {
   name: "Product",
@@ -28,26 +47,15 @@ const Product = {
     },
 
     //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
-    // filteredProducts() {
-    //   return this.products.filter((product) =>
-    //     product.keywords.some(
-    //       (keyword) =>
-    //         keyword.slice(0, 3).toLowerCase() ==
-    //         this.$route.params.id.slice(0, 3).toLowerCase()
-    //     )
-    //   );
-    // },
-
-    //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
     filteredProducts() {
-      if (this.$route.params.id)
-        return this.products.filter((product) =>
-          product.keywords.some(
-            (keyword) =>
-              keyword.slice(0, this.$route.params.id.length).toLowerCase() ==
-              this.$route.params.id.toLowerCase()
-          )
-        );
+      if (this.$route.params.id) console.log(this.$route.params.id);
+      return this.products.filter((product) =>
+        product.keywords.some(
+          (keyword) =>
+            keyword.slice(0, this.$route.params.id.length).toLowerCase() ==
+            this.$route.params.id.toLowerCase()
+        )
+      );
     },
     css() {
       return {
@@ -65,19 +73,7 @@ const Product = {
   },
 
   data() {
-    return {
-      // css: {
-      //   textAlign: "left",
-      //   color: "white",
-      //   background:
-      //     "linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.9),rgba(0,0,0,0.8),rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url(" +
-      //     this.products[this.$route.params.id].img1 +
-      //     "), no-repeat",
-      //   backgroundSize: "cover",
-      //   fontSize: "16px",
-      //   minHeight: "60rem",
-      // },
-    };
+    return {};
   },
   methods: {
     log(item) {
@@ -107,6 +103,23 @@ const Product = {
           <h5 v-else>ingen resultater</h5>
     </template>
     <div
+      v-else-if="video"
+      class="col mt-5 p-5 rounded-custom align-items-center"
+      :style="css"
+    >
+      <h1>{{ products[$route.params.id].title }}</h1>
+      <div class="iframediv ratio ratio-16x9 rounded-custom">
+        <iframe
+          class="rounded-custom"
+          :src="videosrc"
+          frameborder="0"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope;"
+          allowfullscreen
+        >
+        </iframe>
+      </div>
+    </div>
+    <div
       v-else-if="!video"
       class="col pt-3 product p-5 rounded-custom"
       :style="css"
@@ -134,23 +147,6 @@ const Product = {
       </div>
       <div class="col-lg-5"></div>
     </div>
-    <div
-      v-else-if="video"
-      class="col mt-5 p-5 rounded-custom align-items-center"
-      :style="css"
-    >
-      <h1>{{ products[$route.params.id].title }}</h1>
-      <div class="iframediv ratio ratio-16x9 rounded-custom">
-        <iframe
-          class="rounded-custom"
-          :src="videosrc"
-          frameborder="0"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope;"
-          allowfullscreen
-        >
-        </iframe>
-      </div>
-    </div>
   </div>
 </div>`,
 };
@@ -164,6 +160,11 @@ const routes = [
   },
   { name: "Product", path: "/products/:id", component: Product },
   { name: "ProductVideo", path: "/products/:id/video", component: Product },
+  {
+    name: "Liked",
+    path: "/liked",
+    component: Liked,
+  },
 
   // { path: "*", component: Home },
 ];
@@ -244,7 +245,7 @@ const Navigation = {
       if (searchQuery) {
         this.$router.push({
           name: "Product",
-          params: { id: searchQuery, type: "productlist" },
+          params: { search: searchQuery, type: "productlist" },
         });
         this.searchQuery = null;
       }
@@ -371,8 +372,10 @@ const Sidebar = {
   },
   template: `
   <div class="col-md-1 pt-3 text-center mt-5">
-    <i class="bi bi-heart d-md-block m-5 m-md-0 sidebar-icons "></i>
-    <i class="bi bi-calendar d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
+    <router-link :to="{ name: 'Liked'}">
+      <i class="bi bi-heart d-md-block m-5 m-md-0 sidebar-icons "></i>
+    </router-link>
+    <i class="bi bi bi-archive d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
     <i class="bi bi-share d-md-block m-5 m-md-0 sidebar-icons"></i>
   </div>
   `,
@@ -449,14 +452,22 @@ const Cardgroup = {
       console.log(item);
     },
     like(event, card) {
-      console.log(event, card.id);
+      card.liked = !card.liked;
+      if (card.liked == true) {
+        localStorage.setItem(card.title, card.liked);
+      } else {
+        localStorage.removeItem(card.title);
+      }
+      // console.log(card.liked);
+      // console.log(card);
+      // console.log(event.target, card.id);
     },
   },
   template: `
   <div class="row row-cols-1 row-cols-lg-5 g-4">
-    <div class="col" v-for="card in products.slice(0,10)">
+    <div class="col" v-for="card in products.slice(0,10)" :id="card.id">
         <div class="card text-white bg-dark border-2 h-100">
-          <i @click="like($event,card)" class="bi bi-heart likeheart"></i>
+          <i @click="like($event,card)" :class="card.liked?'bi bi-heart-fill likeheart':'bi bi-heart unlikeheart'"></i>
           <router-link :to="{ name: 'Product',params:{id:card.id}}">
             <img :src="card.img1" class="card-img-top" alt="...">
             <div class="card-body">
@@ -555,7 +566,6 @@ const KeaProdukter = {
         });
         parsedData[i] = subfieldData;
       }
-
       // Object.assign for at beholde reactivity
       const parsedProduct = [];
       this.products[this.products.length] = Object.assign({}, parsedProduct, {
@@ -574,6 +584,8 @@ const KeaProdukter = {
         img3: parsedData[12][0],
         article: parsedData[13][0],
         id: this.products.length,
+        mms_id: data.mms_id,
+        liked: localStorage.getItem(parsedData[1][0]),
       });
     },
 
@@ -598,7 +610,6 @@ const KeaProdukter = {
             headers: { "Content-type": "application/json" },
           });
           const data = await response.json();
-          // console.log(data);
           this.parseProducts(data);
         });
         this.loading = false;

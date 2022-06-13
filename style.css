@@ -254,9 +254,17 @@ a {
   top: 0.5rem;
   right: 1rem;
   z-index: 3;
+  color: #eb5045;
 }
 
-.likeheart:hover:before {
-  content: "\F415";
+.unlikeheart {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  z-index: 3;
+}
+
+.unlikeheart:hover:before {
+  /* content: "\F415"; */
   color: #eb5045;
 }
