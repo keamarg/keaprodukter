@@ -503,7 +503,7 @@ const Wrapper = {
       <div class="row">
         <sidebar></sidebar>
         <div v-if="loading" style="min-height: 37rem;" class="col d-flex align-items-center justify-content-center">
-          <h5>Loading please wait...</h5>
+          <h5>Loading TEST please wait...</h5>
         </div>
         <router-view v-else class="col" style="min-height: 35.5rem;"
           :products="products"
