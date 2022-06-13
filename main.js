@@ -260,10 +260,11 @@ const Navigation = {
         </router-link>
         <div class="d-flex w-50">
           <div class="w-100">
-              <input  @input="updateSearchQuery" @keyup.enter="search(searchQuery)" v-model="searchQuery" name="name" class="searchFld form-control me-2" type="searchQuery" autocomplete="off" placeholder="Søg..." aria-label="Søg">
+              <input  @input="updateSearchQuery" @keyup.enter="search(searchQuery)" v-model="searchQuery" name="name" class="searchFld form-control me-2" type="searchQuery" autocomplete="off" placeholder="&#xF52A;" style="font-family:'bootstrap-icons', Arial" aria-label="Søg">
                 <div v-if="searchQuery" class="dropdown w-100">
                   <div class="dropdown-content w-100">
-                    <p v-for="keyword in keywordSearchFilter" @click="search(keyword)" class="w-100">&nbsp;{{keyword}}</p>
+                    <p v-for="keyword in keywordSearchFilter" @click="search(keyword)" class="w-100"><i class="bi bi-search"></i>
+                    &nbsp;{{keyword}}</p>
                 </div>
               </div>
           </div>
@@ -447,19 +448,23 @@ const Cardgroup = {
     log(item) {
       console.log(item);
     },
+    like(event, card) {
+      console.log(event, card.id);
+    },
   },
   template: `
   <div class="row row-cols-1 row-cols-lg-5 g-4">
     <div class="col" v-for="card in products.slice(0,10)">
-      <router-link :to="{ name: 'Product',params:{id:card.id}}">
         <div class="card text-white bg-dark border-2 h-100">
-          <img :src="card.img1" class="card-img-top" alt="...">
-          <div class="card-body">
-            <h5 class="card-title">{{card.title}}</h5>
-            <p class="card-text">{{card.subtitle}}</p>
-          </div>
+          <i @click="like($event,card)" class="bi bi-heart likeheart"></i>
+          <router-link :to="{ name: 'Product',params:{id:card.id}}">
+            <img :src="card.img1" class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 class="card-title">{{card.title}}</h5>
+              <p class="card-text">{{card.subtitle}}</p>
+            </div>
+          </router-link>
         </div>
-      </router-link>
     </div>
   </div>
   `,

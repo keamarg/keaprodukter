@@ -248,3 +248,15 @@ a {
 .dropdown-content p:hover {
   background-color: #ddd;
 }
+
+.likeheart {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  z-index: 3;
+}
+
+.likeheart:hover:before {
+  content: "\F415";
+  color: #eb5045;
+}
