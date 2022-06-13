@@ -48,14 +48,14 @@ const Product = {
 
     //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
     filteredProducts() {
-      if (this.$route.params.id) console.log(this.$route.params.id);
-      return this.products.filter((product) =>
-        product.keywords.some(
-          (keyword) =>
-            keyword.slice(0, this.$route.params.id.length).toLowerCase() ==
-            this.$route.params.id.toLowerCase()
-        )
-      );
+      if (this.$route.params.id)
+        return this.products.filter((product) =>
+          product.keywords.some(
+            (keyword) =>
+              keyword.slice(0, this.$route.params.id.length).toLowerCase() ==
+              this.$route.params.id.toLowerCase()
+          )
+        );
     },
     css() {
       return {
@@ -245,7 +245,7 @@ const Navigation = {
       if (searchQuery) {
         this.$router.push({
           name: "Product",
-          params: { search: searchQuery, type: "productlist" },
+          params: { id: searchQuery, type: "productlist" },
         });
         this.searchQuery = null;
       }
