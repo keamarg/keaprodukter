@@ -257,6 +257,10 @@ a {
   color: #eb5045;
 }
 
+.likeheart:hover:before {
+  content: "\F770";
+}
+
 .unlikeheart {
   position: absolute;
   top: 0.5rem;

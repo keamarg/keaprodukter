@@ -1,3 +1,12 @@
+// store.js
+
+const store = Vue.reactive({
+  // index: 0,
+  // changeProduct(productIndex) {
+  //   this.index = productIndex;
+  // },
+});
+
 //Router components
 
 //view til forsiden
@@ -16,37 +25,30 @@ const Liked = {
   props: ["products", "loading"],
   computed: {
     filteredProducts() {
-      console.log(this.products.filter((product) => product.liked));
+      // console.log(this.products.filter((product) => product.liked));
       return this.products.filter((product) => product.liked);
     },
   },
   methods: {},
   template: `
-    <div>
-      <p v-if="filteredProducts.length<1" class="pt-5 ps-5">Du har ikke "liket" nogen produkter...</p>
-      <Cardgroup v-else :products="filteredProducts"/>
+    <div class="p-3 mb-3">
+      <div class="row align-items-center">
+        <p v-if="filteredProducts.length<1">Du har ikke "liket" nogen produkter...</p>
+        <span v-else>
+          <p>Dine "likes"...</p>
+          <Cardgroup :products="filteredProducts"/>
+        </span>
+      </div>
     </div>
   `,
 };
 
-//view til produktvisning (præsentationsside, videoside, søgningsside osv., burde måske deles op...)
-const Product = {
-  name: "Product",
+//view til results
+const Results = {
+  name: "Results",
   props: ["products", "loading"],
   computed: {
-    video() {
-      return this.$route.fullPath == `/products/${this.$route.params.id}/video`;
-    },
-    videosrc() {
-      return `https://www.youtube.com/embed/${
-        this.products[this.$route.params.id].video
-      }?autoplay=1`;
-    },
-    articlesrc() {
-      return `${this.products[this.$route.params.id].article}`;
-    },
-
-    //tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
+    // tjekker om produktet i søgningen findes i produktlisten (slice sørger for, at også søgninger på f.eks. "pod" stadig viser podcasts)
     filteredProducts() {
       if (this.$route.params.id)
         return this.products.filter((product) =>
@@ -57,13 +59,35 @@ const Product = {
           )
         );
     },
+  },
+  methods: {},
+  created() {},
+  template: `
+    <div :products="products" :loading="loading" class="p-3 mb-3">
+      <div class="row align-items-center">
+        <p>Søgning på {{$route.params.id}}...</p>
+        <Cardgroup v-if="filteredProducts.length>0" :products="filteredProducts"/>
+        <h5 v-else>ingen resultater</h5>
+      </div>
+    </div>
+  `,
+};
+
+//view til produktvisning
+const Product = {
+  name: "Product",
+  props: ["products", "loading"],
+  computed: {
+    articlesrc() {
+      return `${this.products[this.getIndex()].article}`;
+    },
     css() {
       return {
         textAlign: "left",
         color: "white",
         background:
           "linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.9),rgba(0,0,0,0.8),rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url(" +
-          this.products[this.$route.params.id].img1 +
+          this.products[this.getIndex()].img1 +
           "), no-repeat",
         backgroundSize: "cover",
         fontSize: "16px",
@@ -73,11 +97,18 @@ const Product = {
   },
 
   data() {
-    return {};
+    return {
+      store,
+    };
   },
   methods: {
     log(item) {
       console.log(item);
+    },
+    getIndex() {
+      return this.products
+        .map((object) => object.id)
+        .indexOf(this.$route.params.id);
     },
   },
   created() {
@@ -97,39 +128,13 @@ const Product = {
   template: `
   <div :products="products" :loading="loading" class="p-3 mb-3">
   <div class="row align-items-center">
-    <template v-if="$route.params.type"> 
-          <p>Søgning på {{$route.params.id}}...</p>
-          <Cardgroup v-if="filteredProducts.length>0" :products="filteredProducts"/>
-          <h5 v-else>ingen resultater</h5>
-    </template>
-    <div
-      v-else-if="video"
-      class="col mt-5 p-5 rounded-custom align-items-center"
-      :style="css"
-    >
-      <h1>{{ products[$route.params.id].title }}</h1>
-      <div class="iframediv ratio ratio-16x9 rounded-custom">
-        <iframe
-          class="rounded-custom"
-          :src="videosrc"
-          frameborder="0"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope;"
-          allowfullscreen
-        >
-        </iframe>
-      </div>
-    </div>
-    <div
-      v-else-if="!video"
-      class="col pt-3 product p-5 rounded-custom"
-      :style="css"
-    >
+    <div class="col pt-3 product p-5 rounded-custom" :style="css">
       <div class="col-lg-7 producttext rounded-custom">
-        <h1>{{ products[$route.params.id].title }}</h1>
-        <p>{{ products[$route.params.id].text }}</p>
+        <h1>{{ products[getIndex()].title }}</h1>
+        <p>{{ products[getIndex()].text }}</p>
         <router-link :to="{ name: 'ProductVideo',params:{id:$route.params.id}}">
           <button
-            v-if="products[$route.params.id].video"
+            v-if="products[getIndex()].video"
             type="button"
             class="btn btn-custom-product rounded-custom me-4 mt-5"
           >
@@ -137,7 +142,7 @@ const Product = {
           </button>
         </router-link>
         <a
-          v-if="products[$route.params.id].article"
+          v-if="products[getIndex()].article"
           :href="articlesrc"
           target="_blank"
           class="btn btn-custom-product rounded-custom me-4 mt-5"
@@ -151,6 +156,68 @@ const Product = {
 </div>`,
 };
 
+const ProductVideo = {
+  name: "ProductVideo",
+  props: ["products", "loading"],
+  computed: {
+    videosrc() {
+      // console.log(this.$route.params);
+      return `https://www.youtube.com/embed/${
+        this.products[this.getIndex()].video
+      }?autoplay=1`;
+    },
+    css() {
+      return {
+        textAlign: "left",
+        color: "white",
+        background:
+          "linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.9),rgba(0,0,0,0.8),rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url(" +
+          this.products[this.getIndex()].img1 +
+          "), no-repeat",
+        backgroundSize: "cover",
+        fontSize: "16px",
+        minHeight: "60rem",
+      };
+    },
+  },
+
+  data() {
+    return {
+      store,
+    };
+  },
+  methods: {
+    log(item) {
+      console.log(item);
+    },
+    getIndex() {
+      return this.products
+        .map((object) => object.id)
+        .indexOf(this.$route.params.id);
+    },
+  },
+  created() {},
+
+  template: `
+  <div :products="products" :loading="loading" class="p-3 mb-3">
+  <div class="row align-items-center">
+    <div class="col mt-5 p-5 rounded-custom align-items-center" :style="css">
+      <h1>{{ products[getIndex()].title }}</h1>
+      <div class="iframediv ratio ratio-16x9 rounded-custom">
+        <iframe
+          class="rounded-custom"
+          :src="videosrc"
+          frameborder="0"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope;"
+          allowfullscreen
+        >
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>`,
+};
+
 //Routes
 const routes = [
   {
@@ -158,12 +225,22 @@ const routes = [
     path: "/",
     component: Home,
   },
-  { name: "Product", path: "/products/:id", component: Product },
-  { name: "ProductVideo", path: "/products/:id/video", component: Product },
+  { name: "Product", path: "/:id", component: Product },
+  {
+    name: "ProductVideo",
+    path: "/:id/video",
+    component: ProductVideo,
+  },
   {
     name: "Liked",
     path: "/liked",
     component: Liked,
+  },
+
+  {
+    name: "Results",
+    path: "/results/:id",
+    component: Results,
   },
 
   // { path: "*", component: Home },
@@ -244,8 +321,8 @@ const Navigation = {
     search(searchQuery) {
       if (searchQuery) {
         this.$router.push({
-          name: "Product",
-          params: { id: searchQuery, type: "productlist" },
+          name: "Results",
+          params: { id: searchQuery, list: "productlist" },
         });
         this.searchQuery = null;
       }
@@ -261,7 +338,7 @@ const Navigation = {
         </router-link>
         <div class="d-flex w-50">
           <div class="w-100">
-              <input  @input="updateSearchQuery" @keyup.enter="search(searchQuery)" v-model="searchQuery" name="name" class="searchFld form-control me-2" type="searchQuery" autocomplete="off" placeholder="&#xF52A;" style="font-family:'bootstrap-icons', Arial" aria-label="Søg">
+              <input  @input="updateSearchQuery" @keyup.enter="search(searchQuery)" v-model="searchQuery" name="name" class="searchFld form-control me-2" type="text" autocomplete="off" placeholder="&#xF52A;" style="font-family:'bootstrap-icons', Arial" aria-label="Søg">
                 <div v-if="searchQuery" class="dropdown w-100">
                   <div class="dropdown-content w-100">
                     <p v-for="keyword in keywordSearchFilter" @click="search(keyword)" class="w-100"><i class="bi bi-search"></i>
@@ -290,12 +367,12 @@ const Btngroup = {
   <div class="btn-group d-flex text-center" role="group" aria-label="Basic example">
     <div class="col d-sm-flex justify-content-center">
         <span v-for="(material,index) in materials.slice(0,8)" v-if="materials">
-          <router-link :to="{ name: 'Product',params:{id:material,type:'productlist'}}">
+          <router-link :to="{ name: 'Results',params:{id:material.toLowerCase(),list:'productlist'}}">
             <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{material}}</button>
           </router-link>
         </span>
         <span v-for="category in categories.slice(0,10)" v-if="categories">
-          <router-link :to="{ name: 'Product',params:{id:category, type:'productlist'}}">
+          <router-link :to="{ name: 'Results',params:{id:category.toLowerCase(), list:'productlist'}}">
             <button type="button" class="btn btn-primary btn-custom-nav me-4 rounded-pill">{{category}}</button>
           </router-link>
         </span>
@@ -462,18 +539,23 @@ const Cardgroup = {
       // console.log(card);
       // console.log(event.target, card.id);
     },
+    // setIndex(index) {
+    //   this.index = index;
+    //   console.log(this.index);
+    //   store.index = index;
+    // },
   },
   template: `
   <div class="row row-cols-1 row-cols-lg-5 g-4">
-    <div class="col" v-for="card in products.slice(0,10)" :id="card.id">
+    <div class="col" v-for="(card,index) in products.slice(0,10)" :id="card.id">
         <div class="card text-white bg-dark border-2 h-100">
           <i @click="like($event,card)" :class="card.liked?'bi bi-heart-fill likeheart':'bi bi-heart unlikeheart'"></i>
-          <router-link :to="{ name: 'Product',params:{id:card.id}}">
-            <img :src="card.img1" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">{{card.title}}</h5>
-              <p class="card-text">{{card.subtitle}}</p>
-            </div>
+          <router-link :to="{ name: 'Product',params:{id:card.id}}" >
+              <img :src="card.img1" class="card-img-top" alt="...">
+              <div class="card-body">
+                <h5 class="card-title">{{card.title}}</h5>
+                <p class="card-text">{{card.subtitle}}</p>
+              </div>
           </router-link>
         </div>
     </div>
@@ -505,6 +587,10 @@ const Wrapper = {
       }
     },
     updateSearchQuery(value1, value2) {
+      // console.log(value2);
+      // this.filteredList = value2.map(
+      //   (product, index) => (product.index = index)
+      // );
       this.filteredList = value2;
     },
   },
@@ -583,8 +669,8 @@ const KeaProdukter = {
         img2: parsedData[11][0],
         img3: parsedData[12][0],
         article: parsedData[13][0],
-        id: this.products.length,
-        mms_id: data.mms_id,
+        // index: this.products.length,
+        id: data.mms_id,
         liked: localStorage.getItem(parsedData[1][0]),
       });
     },
