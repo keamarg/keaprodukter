@@ -153,13 +153,134 @@ a {
 /* Tried this, did not work: https://www.codeply.com/p/0CWffz76Q9 */
 
 /* Icons sidebar */
+
 .sidebar-icons {
   color: #ced4da;
   font-size: 4rem;
+  line-height: 5rem;
 }
+
 .sidebar-icons:hover {
   color: white;
 }
+.tooltip-inner {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-size: 2rem;
+  opacity: 0.6;
+}
+/* 
+.tooltip.top .tooltip-arrow {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.4 !important;
+}
+
+.tooltip.right .tooltip-arrow {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.4 !important;
+}
+
+.tooltip.bottom .tooltip-arrow {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.4 !important;
+}
+
+.tooltip.left .tooltip-arrow {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.4 !important;
+} */
+
+/* .sidebar-text {
+  color: #ced4da;
+  font-size: 2rem;
+  line-height: 5rem;
+} */
+
+.sidebar-icon-like:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "\f415";
+  color: white;
+  opacity: 0.5;
+  transition: all 0.6s ease-in-out;
+}
+
+.sidebar-icon-like:hover:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "\f415";
+  color: white;
+  opacity: 1;
+}
+
+.sidebar-icon-archive:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "\F10C";
+  color: white;
+  opacity: 0.5;
+  transition: all 0.6s ease-in-out;
+}
+
+.sidebar-icon-archive:hover:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "\F10C";
+  color: white;
+  opacity: 1;
+}
+
+.sidebar-icon-share:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "\F52D";
+  color: white;
+  opacity: 0.5;
+  transition: all 0.6s ease-in-out;
+}
+
+.sidebar-icon-share:hover:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "\F52D";
+  color: white;
+  opacity: 1;
+}
+
+/* .sidebar-icon-like:hover:before {
+  font-family: Arial, Helvetica, sans-serif;
+  content: "Likes";
+  opacity: 0.4;
+} */
+
+/* .sidebar-icon-archive:before {
+  content: "\f417";
+  color: white;
+  opacity: 1;
+  transition: all 2s ease-in-out;
+}
+
+.sidebar-icon-archive:hover:before {
+  content: "Arkiv";
+  opacity: 0.4;
+} */
+
+/* @keyframes changeContent {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+    content: "Likes";
+  }
+}
+
+.sidebar-icon-like:before {
+  content: "\F417";
+  transition: all 0.2s linear;
+  animation-direction: reverse;
+}
+.sidebar-icon-like:hover:before {
+  animation-fill-mode: forwards;
+  animation: changeContent 0.5s linear forwards;
+} */
 
 /* .product {
   text-align: left;

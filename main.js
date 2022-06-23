@@ -1,3 +1,10 @@
+var tooltipTriggerList = [].slice.call(
+  document.querySelectorAll('[data-bs-toggle="tooltip"]')
+);
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+
 // store.js
 
 const store = Vue.reactive({
@@ -68,6 +75,27 @@ const Results = {
         <p>Søgning på {{$route.params.id}}...</p>
         <Cardgroup v-if="filteredProducts.length>0" :products="filteredProducts"/>
         <h5 v-else>ingen resultater</h5>
+      </div>
+    </div>
+  `,
+};
+
+//view til archive
+const Archive = {
+  name: "Archive",
+  props: ["products", "loading"],
+  data() {
+    return {
+      displayAll: true,
+    };
+  },
+  computed: {},
+  methods: {},
+  template: `
+    <div class="p-3 mb-3">
+      <div class="row align-items-center">
+        <p>Alle KEA produkter...</p>
+        <Cardgroup :products="products" :displayAll="displayAll"/>
       </div>
     </div>
   `,
@@ -241,6 +269,12 @@ const routes = [
     name: "Results",
     path: "/results/:id",
     component: Results,
+  },
+
+  {
+    name: "Archive",
+    path: "/archive",
+    component: Archive,
   },
 
   // { path: "*", component: Home },
@@ -440,7 +474,11 @@ const Sidebar = {
   name: "Sidebar",
   props: {},
   data() {
-    return {};
+    return {
+      // hoverarchive: false,
+      // hoverlike: false,
+      // hovershare: false,
+    };
   },
   methods: {
     log(item) {
@@ -449,14 +487,29 @@ const Sidebar = {
   },
   template: `
   <div class="col-md-1 pt-3 text-center mt-5">
-    <router-link :to="{ name: 'Liked'}">
-      <i class="bi bi-heart d-md-block m-5 m-md-0 sidebar-icons "></i>
-    </router-link>
-    <i class="bi bi bi-archive d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
-    <i class="bi bi-share d-md-block m-5 m-md-0 sidebar-icons"></i>
+  <router-link :to="{ name: 'Liked'}">
+    <i class="bi bi-heart d-md-block m-5 m-md-0 sidebar-icons sidebar-icon-like" data-bs-toggle="tooltip" data-bs-placement="auto" title="Likes"></i>
+  </router-link>
+  <router-link :to="{ name: 'Archive'}">
+    <i class="bi bi bi-archive d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons sidebar-icon-archive" data-bs-toggle="tooltip" data-bs-placement="auto" title="Arkiv"></i>
+  </router-link>
+    <i class="bi bi-share d-md-block m-5 m-md-0 sidebar-icons sidebar-icon-share" data-bs-toggle="tooltip" data-bs-placement="auto" title="Del"></i>
   </div>
   `,
 };
+
+// <router-link :to="{ name: 'Liked'}">
+// <i @mouseover="hoverlike = true" @mouseleave="hoverlike = false" v-if="!hoverlike" class="bi bi-heart d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
+// <i @mouseover="hoverlike = true" @mouseleave="hoverlike = false" v-else class="d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-text">Likes</i>
+// </router-link>
+// <router-link :to="{ name: 'Archive'}">
+// <i @mouseover="hoverarchive = true" @mouseleave="hoverarchive = false" v-if="!hoverarchive" class="bi bi-archive d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
+// <i @mouseover="hoverarchive = true" @mouseleave="hoverarchive = false" v-else class="d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-text">Arkiv</i>
+// </router-link>
+// <router-link :to="{ name: 'Archive'}">
+// <i @mouseover="hovershare = true" @mouseleave="hovershare = false" v-if="!hovershare" class="bi bi-share d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-icons"></i>
+// <i @mouseover="hovershare = true" @mouseleave="hovershare = false" v-else class="d-md-block mt-md-5 mb-md-5 mt-0 mtb-0 sidebar-text">Share</i>
+// </router-link>
 
 //Carousel
 const Carousel = {
@@ -520,9 +573,21 @@ const Cardgroup = {
   props: {
     products: { type: Array },
     loading: { type: Boolean },
+    displayAll: { type: Boolean },
   },
   data() {
     return {};
+  },
+  computed: {
+    productsList: function () {
+      let productsList;
+      if (this.displayAll) {
+        productsList = this.products;
+      } else {
+        productsList = this.products.slice(0, 10);
+      }
+      return productsList;
+    },
   },
   methods: {
     log(item) {
@@ -547,7 +612,7 @@ const Cardgroup = {
   },
   template: `
   <div class="row row-cols-1 row-cols-lg-5 g-4">
-    <div class="col" v-for="(card,index) in products.slice(0,10)" :id="card.id">
+    <div class="col" v-for="(card,index) in productsList" :id="card.id">
         <div class="card text-white bg-dark border-2 h-100">
           <i @click="like($event,card)" :class="card.liked?'bi bi-heart-fill likeheart':'bi bi-heart unlikeheart'"></i>
           <router-link :to="{ name: 'Product',params:{id:card.id}}" >
@@ -596,6 +661,12 @@ const Wrapper = {
   },
   template: `
   <div>
+     <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+        <a class="a2a_button_facebook"></a>
+        <a class="a2a_button_twitter"></a>
+        <a class="a2a_button_linkedin"></a>
+        <a class="a2a_button_email"></a>
+      </div>
       <topbar :products="products" @updateSearchQuery="updateSearchQuery"></topbar>
       <div class="row">
         <sidebar></sidebar>
@@ -669,7 +740,6 @@ const KeaProdukter = {
         img2: parsedData[11][0],
         img3: parsedData[12][0],
         article: parsedData[13][0],
-        // index: this.products.length,
         id: data.mms_id,
         liked: localStorage.getItem(parsedData[1][0]),
       });
